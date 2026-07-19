@@ -1201,6 +1201,7 @@ function lose(reason){
 }
 
 /* ============================== BOOT ============================== */
+let BOOTED = false;
 function showFatal(msg){
   try{
     document.getElementById("crt").innerHTML =
@@ -1210,10 +1211,14 @@ function showFatal(msg){
       '<p class="hint">Screenshot this and send it over so I can patch it.</p>';
   }catch(e){}
 }
-window.onerror = function(m,src,line,col){ showFatal(m+"  (line "+line+")"); };
+window.onerror = function(m,src,line,col){
+  if(BOOTED) return false;              // game is running; ignore injected/third-party script noise
+  showFatal(m+"  (line "+line+")");
+};
 try{
   newGame();
   render();
+  BOOTED = true;
 }catch(err){
   showFatal((err&&err.stack)?err.stack:err);
 }
