@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0704">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dead Man's Trail">
+<title>Dead Man's Trail</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap"></noscript>
+<style>
+  :root{
+    --bg:#0a0704;
+    --screen:#120b04;
+    --amber:#ffb000;
+    --amber-dim:#b5730a;
+    --amber-faint:#7a4e08;
+    --amber-bright:#ffd98a;
+    --danger:#ff5a1f;
+    --glow:0 0 4px rgba(255,176,0,.55), 0 0 12px rgba(255,140,0,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0a0704}
+  body{
+    background:
+      radial-gradient(circle at 50% 20%, #1b1206 0%, #0a0704 60%, #050301 100%);
+    display:flex;align-items:center;justify-content:center;
+    padding:16px;min-height:100vh;
+    font-family:'VT323',ui-monospace,Menlo,'Courier New',monospace;
+    color:var(--amber);
+  }
+  /* CRT monitor shell */
+  .monitor{
+    width:100%;max-width:760px;
+    background:linear-gradient(#241a12,#160f09);
+    border-radius:22px;
+    padding:22px;
+    box-shadow:0 25px 60px rgba(0,0,0,.7), inset 0 2px 3px rgba(255,200,120,.15), inset 0 -6px 14px rgba(0,0,0,.6);
+    border:1px solid #3a2a1a;
+  }
+  .screen{
+    position:relative;
+    background-color:var(--screen);
+    background-image:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.22) 3px, rgba(0,0,0,.22) 4px);
+    border-radius:12px;
+    padding:26px 26px 20px;
+    box-shadow:inset 0 0 50px rgba(0,0,0,.55);
+    min-height:520px;
+    display:flex;flex-direction:column;
+  }
+  @keyframes flicker{0%,100%{opacity:.9}48%{opacity:.86}50%{opacity:.98}52%{opacity:.87}}
+  @media (prefers-reduced-motion: reduce){ .marker{animation:none!important} }
+
+  .crt{flex:1;display:flex;flex-direction:column;text-shadow:var(--glow)}
+  pre{margin:0;font-family:'VT323',ui-monospace,Menlo,'Courier New',monospace;line-height:1.02;text-shadow:var(--glow)}
+  h1,h2,h3{font-weight:400;margin:0;letter-spacing:1px}
+  p{margin:.35em 0;line-height:1.15}
+  .big{font-size:clamp(30px,7vw,58px);line-height:.95;color:var(--amber-bright)}
+  .sub{font-size:20px;color:var(--amber-dim);letter-spacing:3px}
+  .fs20{font-size:20px}.fs22{font-size:22px}.fs24{font-size:24px}.fs28{font-size:28px}
+  .dim{color:var(--amber-dim)}.faint{color:var(--amber-faint)}.bright{color:var(--amber-bright)}
+  .danger{color:var(--danger);text-shadow:0 0 6px rgba(255,90,31,.6)}
+  .center{text-align:center}
+  .flex{flex:1}
+  .blink{animation:blink 1.1s step-end infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* status bar */
+  .status{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:2px 14px;
+    border:1px solid var(--amber-faint);padding:8px 12px;border-radius:6px;
+    font-size:19px;margin-bottom:16px;
+  }
+  .status div span{color:var(--amber-bright)}
+  .status .lo{color:var(--danger);text-shadow:0 0 6px rgba(255,90,31,.6)}
+
+  .body{font-size:22px;flex:1}
+  .narr{font-size:22px;border-left:3px solid var(--amber-faint);padding-left:12px;margin:10px 0 16px}
+
+  /* menu */
+  .menu{list-style:none;margin:14px 0 0;padding:0}
+  .menu button{
+    all:unset;display:block;width:100%;cursor:pointer;
+    font-family:'VT323',ui-monospace,Menlo,'Courier New',monospace;font-size:24px;color:var(--amber);
+    padding:5px 10px;border-radius:4px;text-shadow:var(--glow);
+    transition:background .08s, color .08s;
+  }
+  .menu button:hover,.menu button:focus-visible{background:var(--amber);color:#120b04;text-shadow:none;outline:none}
+  .menu button:hover .k,.menu button:focus-visible .k{color:#120b04}
+  .k{color:var(--amber-bright);margin-right:8px}
+  .hint{font-size:18px;color:var(--amber-faint);margin-top:14px}
+
+  input{
+    all:unset;font-family:'VT323',ui-monospace,Menlo,'Courier New',monospace;font-size:24px;color:var(--amber-bright);
+    border-bottom:2px solid var(--amber-dim);min-width:180px;padding:0 4px;text-shadow:var(--glow);
+  }
+  input:focus{border-color:var(--amber)}
+
+  /* bars */
+  .bar{display:inline-block;height:14px;width:180px;border:1px solid var(--amber-faint);border-radius:3px;vertical-align:middle;overflow:hidden;background:#0a0603}
+  .bar>i{display:block;height:100%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+  .bar.dng>i{background:var(--danger);box-shadow:0 0 8px var(--danger)}
+
+  /* combat aim meter */
+  .aim{position:relative;height:34px;border:2px solid var(--amber-dim);border-radius:5px;margin:14px 0;overflow:hidden;background:#0a0603}
+  .zone{position:absolute;top:0;bottom:0;background:rgba(255,176,0,.18)}
+  .zone.crit{background:rgba(255,90,31,.35)}
+  .marker{position:absolute;top:0;bottom:0;width:5px;background:var(--amber-bright);box-shadow:0 0 10px var(--amber-bright);left:0;animation:sweep .9s linear infinite alternate}
+  @keyframes sweep{from{left:0}to{left:calc(100% - 5px)}}
+
+  .crewline{font-size:21px}
+  .rip{color:var(--amber-faint)}
+  .row{display:flex;justify-content:space-between;gap:12px;font-size:21px}
+  hr{border:none;border-top:1px solid var(--amber-faint);margin:12px 0}
+  .tag{border:1px solid var(--amber-faint);border-radius:3px;padding:0 6px;font-size:17px;color:var(--amber-dim)}
+
+  /* keep long ASCII art from forcing horizontal overflow on small screens */
+  pre{max-width:100%;overflow-x:auto}
+
+  @media (max-width:640px){
+    body{padding:8px}
+    .monitor{padding:12px;border-radius:16px}
+    .screen{padding:16px 14px 14px;border-radius:10px;min-height:78vh}
+    .status{grid-template-columns:repeat(2,1fr);font-size:18px;gap:2px 10px}
+    .menu button{font-size:23px;padding:7px 8px}
+    .body,.narr,.crewline,.row{font-size:20px}
+    .big{font-size:40px}
+    .sub{font-size:16px;letter-spacing:2px}
+    .bar{width:150px}
+  }
+
+  /* ============ VISUAL FX ============ */
+  .screen-in{animation:screenIn .3s ease-out}
+  @keyframes screenIn{from{transform:translateY(10px)}to{transform:translateY(0)}}
+  .menu button{transition:background .08s,color .08s,transform .06s}
+  .menu button:active{transform:scale(.97)}
+  .screen.shakefx{animation:shakeK .38s}
+  @keyframes shakeK{0%,100%{transform:none}20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-4px)}60%{transform:translate(-5px,2px)}80%{transform:translate(3px,-2px)}}
+  .flashfx{position:absolute;inset:0;pointer-events:none;z-index:9;border-radius:12px;opacity:0}
+  .flashfx.fire{background:radial-gradient(circle at 18% 72%,rgba(255,210,90,.9),rgba(255,120,0,.3) 45%,transparent 72%);animation:flashK .5s ease-out forwards}
+  .flashfx.hit{background:rgba(255,70,25,.32);animation:flashK .55s ease-out forwards}
+  @keyframes flashK{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+  .sea{position:relative;overflow:hidden;border:1px solid var(--amber-faint);border-radius:8px;background:linear-gradient(180deg,#0e0a05 0%,#161009 60%,#0b0804 100%);margin:6px 0 10px}
+  .sun{position:absolute;right:24px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--amber);box-shadow:0 0 22px 6px rgba(255,176,0,.45);animation:sunPulse 3.2s ease-in-out infinite}
+  @keyframes sunPulse{50%{box-shadow:0 0 32px 10px rgba(255,176,0,.6)}}
+  .shipwrap{position:absolute;left:0;right:0;bottom:32px;display:flex;justify-content:center;animation:shipBob 2.8s ease-in-out infinite;z-index:2}
+  .shipart{color:var(--amber);text-shadow:var(--glow);line-height:1}
+  @keyframes shipBob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-8px) rotate(1.5deg)}}
+  .shipwrap.sinking{animation:sinkShip 4.5s ease-in forwards}
+  @keyframes sinkShip{0%{transform:translateY(0) rotate(-2deg)}100%{transform:translateY(120px) rotate(18deg);opacity:.08}}
+  .wave{position:absolute;left:0;width:200%;height:34px;z-index:3;background-repeat:repeat-x;background-size:120px 34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='34'%3E%3Cpath d='M0 18 Q15 6 30 18 T60 18 T90 18 T120 18 V34 H0 Z' fill='%23241705'/%3E%3Cpath d='M0 18 Q15 6 30 18 T60 18 T90 18 T120 18' stroke='%23b5730a' stroke-width='2' fill='none'/%3E%3C/svg%3E")}
+  .w1{bottom:13px;opacity:.5;animation:waveMove 6s linear infinite}
+  .w2{bottom:0;animation:waveMove 3.8s linear infinite reverse}
+  @keyframes waveMove{from{transform:translateX(0)}to{transform:translateX(-120px)}}
+  .farship{position:absolute;right:16%;bottom:50px;font-size:10px;color:var(--amber-dim);line-height:1;animation:farBob 3.4s ease-in-out infinite;z-index:1}
+  @keyframes farBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .ghostship{animation:ghostFlicker 2.4s ease-in-out infinite}
+  @keyframes ghostFlicker{0%,100%{opacity:.12}50%{opacity:.55}}
+  .palm{position:absolute;right:22px;bottom:38px;color:var(--amber-dim);font-size:14px;line-height:1.05;z-index:1}
+  .tent{position:absolute;bottom:-4px;color:var(--amber-dim);font-size:13px;line-height:1;z-index:4;text-shadow:var(--glow);animation:tentRise 2.4s ease-out forwards,tentSway 2.2s ease-in-out 1.2s infinite}
+  .t1{left:14%}
+  .t2{right:16%;animation-delay:.5s,1.7s}
+  @keyframes tentRise{from{transform:translateY(95px)}to{transform:translateY(0)}}
+  @keyframes tentSway{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-5px) rotate(5deg)}}
+  .rainfx{position:absolute;inset:0;z-index:5;pointer-events:none;background:repeating-linear-gradient(112deg,transparent 0 7px,rgba(200,215,255,.13) 7px 8px);animation:rainShift .45s linear infinite}
+  @keyframes rainShift{from{background-position:0 0}to{background-position:-26px 44px}}
+  .boltfx{position:absolute;inset:0;z-index:6;pointer-events:none;background:rgba(255,240,200,.9);opacity:0;animation:bolt 3.5s infinite}
+  @keyframes bolt{0%,91%,95%,100%{opacity:0}92%,94%{opacity:.5}93%{opacity:.12}}
+  .sailing-dots span{display:inline-block;margin:0 5px;animation:dotp 1.2s infinite}
+  .sailing-dots span:nth-child(2){animation-delay:.2s}
+  .sailing-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes dotp{0%,100%{opacity:.15}50%{opacity:1}}
+  .titleship{animation:shipBob 3.6s ease-in-out infinite}
+  .sparks{position:relative;height:0;z-index:7}
+  .sparks i{position:absolute;top:0;width:5px;height:5px;border-radius:50%;background:var(--amber-bright);box-shadow:0 0 8px var(--amber);animation:sparkFly 2.4s ease-out infinite}
+  .sparks i:nth-child(1){left:10%;animation-delay:0s;animation-duration:2.1s}
+  .sparks i:nth-child(2){left:24%;animation-delay:.5s;animation-duration:2.6s}
+  .sparks i:nth-child(3){left:38%;animation-delay:.2s;animation-duration:2.3s}
+  .sparks i:nth-child(4){left:50%;animation-delay:.8s;animation-duration:2.8s}
+  .sparks i:nth-child(5){left:62%;animation-delay:.35s;animation-duration:2.2s}
+  .sparks i:nth-child(6){left:74%;animation-delay:.65s;animation-duration:2.5s}
+  .sparks i:nth-child(7){left:86%;animation-delay:.15s;animation-duration:2.4s}
+  .sparks i:nth-child(8){left:94%;animation-delay:.9s;animation-duration:2.7s}
+  @keyframes sparkFly{0%{transform:translateY(12px) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-115px) scale(1);opacity:0}}
+  @media (prefers-reduced-motion:reduce){
+    .shipwrap,.wave,.sun,.farship,.tent,.rainfx,.boltfx,.sparks i,.sailing-dots span,.titleship,.screen.shakefx{animation:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="monitor">
+  <div class="screen">
+    <div class="crt" id="crt">
+      <div class="center" style="padding-top:40px">
+        <h1 class="big">DEAD MAN'S TRAIL</h1>
+        <p class="sub">A FIZZ-FUELLED VOYAGE</p>
+        <p class="fs22" style="margin-top:26px">Ahoy! If ye can read this, this app isn't runnin' the game's code &mdash; only previewin' the page.</p>
+        <p class="fs20 dim" style="margin-top:14px">iPhone file previews (Quick Look) don't run games. To play:</p>
+        <p class="fs20 dim">&bull; Open this chat in Claude and tap the game there, or</p>
+        <p class="fs20 dim">&bull; Open this file in a real browser (Safari via a hosted link, or any browser on a computer).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================== GAME STATE ============================== */
+const CREW_POOL = ["Bootstrap Bill","One-Eyed Jack","Salty Meg","Barnacle Pete","Calico Rose",
+  "Gunner Flynn","Mad Tom","Squid Lips","Blackfoot Nan","Peg-Leg Otis","Fishguts Ferris",
+  "Cutlass Kate","Riggin' Dan","Old Hobb","Nib the Younger","Scupper Joe"];
+
+const PROFESSIONS = [
+  {name:"Wealthy Privateer",  gold:1600, note:"a full purse, but a soft one",  rank:1},
+  {name:"Grizzled Buccaneer", gold:900,  note:"scarred, salted, and sensible", rank:2},
+  {name:"Penniless Deckhand", gold:450,  note:"nothin' but grit and a grudge", rank:3},
+];
+
+const DEST = "the Isle of Bones";
+const LEAGUES_TOTAL = 2000;
+
+let G = null;
+function newGame(){
+  G = {
+    screen:"title",
+    captain:"", ship:"",
+    prof:null,
+    crew:[],
+    doubloons:0, rum:0, rations:0, cannonballs:0,
+    hull:100, morale:70,
+    league:0, day:1,
+    pace:"steady", food:"filling", grog:"meager",
+    atPort:false, portName:"",
+    log:[],
+    event:null, combat:null, pendingAfterEvent:null,
+    outcome:null, deaths:[],
+    _rng:Math.random,
+  };
+}
+
+/* ============================== HELPERS ============================== */
+const crt = document.getElementById("crt");
+let OPTIONS = [];   // current menu {label, fn}
+let INPUT_MODE = null;
+
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function chance(p){return Math.random()<p;}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function livingCrew(){return G.crew.filter(c=>c.alive);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function setMenu(options){
+  OPTIONS = options;
+  let html = '<ul class="menu">';
+  options.forEach((o,i)=>{
+    html += `<li><button data-i="${i}"><span class="k">${i+1}.</span>${o.label}</button></li>`;
+  });
+  html += '</ul>';
+  return html;
+}
+function bindMenu(){
+  crt.querySelectorAll('.menu button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const o = OPTIONS[+b.dataset.i];
+      if(o && o.fn) o.fn();
+    });
+  });
+  const first = crt.querySelector('.menu button');
+  if(first) first.focus();
+}
+document.addEventListener('keydown',(e)=>{
+  if(INPUT_MODE) return;
+  const n = parseInt(e.key,10);
+  if(n>=1 && n<=OPTIONS.length){
+    const o = OPTIONS[n-1];
+    if(o && o.fn){ e.preventDefault(); o.fn(); }
+  }
+});
+
+/* status bar renderer */
+function statusBar(){
+  const lo = (v,t)=> v<=t ? 'lo' : '';
+  return `<div class="status">
+    <div class="${lo(G.rations,3)}">Rations <span>${Math.floor(G.rations)}</span></div>
+    <div class="${lo(G.rum,3)}">Fizz <span>${Math.floor(G.rum)}</span></div>
+    <div>Doubloons <span>${G.doubloons}</span></div>
+    <div class="${lo(G.cannonballs,2)}">Cannon <span>${G.cannonballs}</span></div>
+    <div class="${lo(G.hull,25)}">Hull <span>${Math.round(G.hull)}%</span></div>
+    <div class="${lo(G.morale,25)}">Morale <span>${Math.round(G.morale)}%</span></div>
+    <div>Crew <span>${livingCrew().length}</span></div>
+    <div>Day <span>${G.day}</span></div>
+  </div>`;
+}
+function progressLine(){
+  const pct = clamp(G.league/LEAGUES_TOTAL,0,1);
+  const cells = 34, fill = Math.round(pct*cells);
+  const bar = "="+"█".repeat(fill)+"·".repeat(cells-fill)+"⚑";
+  return `<pre class="dim fs20">Tortuga ${bar} ${DEST}\n        ${G.league} of ${LEAGUES_TOTAL} leagues — ${Math.round(pct*100)}% to plunder</pre>`;
+}
+
+/* ============================== HIGH SCORES ============================== */
+const HS_KEY = "dmt_scores_v1";
+let SCORES = null;               // session cache; source of truth once loaded
+
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function _lsGet(){ try{ const ls=window.localStorage; if(ls){ const v=ls.getItem(HS_KEY); return v?JSON.parse(v):null; } }catch(e){} return null; }
+function _lsSet(list){ try{ const ls=window.localStorage; if(ls){ ls.setItem(HS_KEY, JSON.stringify(list)); return true; } }catch(e){} return false; }
+
+async function loadScores(){
+  // 1) Claude artifact persistent storage (async, present in the in-app viewer)
+  try{
+    if(window.storage && window.storage.get){
+      const r = await window.storage.get(HS_KEY, false);
+      if(r && r.value) return JSON.parse(r.value);
+      return [];
+    }
+  }catch(e){ /* key may not exist yet */ }
+  // 2) standalone downloaded file / Safari / wrapped app
+  const ls = _lsGet(); if(ls) return ls;
+  // 3) neither available — session only
+  return [];
+}
+async function persistScores(list){
+  try{
+    if(window.storage && window.storage.set){ await window.storage.set(HS_KEY, JSON.stringify(list), false); return; }
+  }catch(e){}
+  _lsSet(list);
+}
+async function ensureScoresLoaded(){
+  if(SCORES) return SCORES;
+  SCORES = await loadScores();
+  if(!Array.isArray(SCORES)) SCORES=[];
+  return SCORES;
+}
+async function recordVoyage(entry){
+  await ensureScoresLoaded();
+  SCORES.push(entry);
+  SCORES.sort((a,b)=>b.score-a.score);
+  SCORES = SCORES.slice(0,15);
+  await persistScores(SCORES);
+}
+async function clearScores(){ SCORES=[]; await persistScores([]); }
+
+function voyageScore(won){
+  const survivors=livingCrew().length;
+  let s = G.doubloons + survivors*300 + Math.round(G.hull*4) + Math.round(G.morale*2) + Math.round(G.league/4) - G.day*3;
+  if(won) s += 1500;
+  return Math.max(0, Math.round(s));
+}
+function voyageRank(s){
+  return s>4500?"LEGENDARY CORSAIR":s>3000?"DREAD PIRATE":s>1800?"SEASONED BUCCANEER":s>800?"SALTY DOG":"LANDLUBBER";
+}
+function recordEnd(score, rank, won){
+  if(G._recorded) return;            // guard against double-recording on re-render
+  G._recorded = true;
+  G._entry = { cap:G.captain, ship:G.ship, score, rank,
+    leagues:Math.min(G.league,LEAGUES_TOTAL), days:G.day,
+    survivors:livingCrew().length, crew:G.crew.length, won, ts:Date.now() };
+  recordVoyage(G._entry);            // fire-and-forget persist; display merges G._entry directly
+}
+
+function ledgerScreen(){
+  crt.innerHTML = `<h2 class="fs28 bright">🏴 HALL OF LEGENDS</h2><p class="dim fs20">Hauling up the ledger…</p>`;
+  (async()=>{
+    let list = [];
+    try{ list = (await ensureScoresLoaded()).slice(); }catch(e){ list=[]; }
+    // guarantee the just-finished voyage shows even if the async write hasn't landed
+    if(G._entry && !list.some(e=>e.ts===G._entry.ts)) list.push(G._entry);
+    list.sort((a,b)=>b.score-a.score);
+    const top = list.slice(0,12);
+    let rows;
+    if(top.length===0){
+      rows = `<p class="fs22 dim" style="margin-top:10px">No voyages recorded yet.<br>Set sail and carve yer name into the ledger.</p>`;
+    } else {
+      rows = top.map((e,i)=>{
+        const me = G._entry && e.ts===G._entry.ts;
+        const fate = e.won ? '<span class="bright">⚑ reached the Isle</span>'
+                           : `<span class="rip">☠ lost at ${e.leagues} lg</span>`;
+        return `<div class="row" style="align-items:flex-start;margin:5px 0">
+          <span class="${me?'':'dim'}">${String(i+1).padStart(2,'0')}. <span class="${me?'bright':''}">${escapeHtml(e.cap)}</span> <span class="faint">— the ${escapeHtml(e.ship)}</span><br>
+            <span class="tag">${e.rank}</span> ${fate}${me?' <span class="faint">(this run)</span>':''}</span>
+          <span class="bright">${e.score}</span></div>`;
+      }).join('<hr style="margin:6px 0">');
+    }
+    const opts = [{label:"Back to the docks", fn:()=>{G.screen="title";render();}}];
+    if(top.length) opts.push({label:"Scuttle the ledger (clear all)", fn:confirmClear});
+    crt.innerHTML = `<h2 class="fs28 bright">🏴 HALL OF LEGENDS</h2>
+      <p class="dim fs20">The finest runs from Tortuga to ${DEST}.</p><hr>
+      <div class="body">${rows}</div>${setMenu(opts)}`;
+    bindMenu();
+  })();
+}
+function confirmClear(){
+  crt.innerHTML = `<h2 class="fs28 danger">SCUTTLE THE LEDGER?</h2>
+    <p class="fs22">This wipes every recorded voyage for good.</p><div class="flex"></div>
+    ${setMenu([
+      {label:"Aye, send it to the deep", fn:()=>{ clearScores(); G._entry=null; G.screen="ledger"; render(); }},
+      {label:"Belay that — keep it", fn:()=>{ G.screen="ledger"; render(); }},
+    ])}`;
+  bindMenu();
+}
+function endScreen(){ if(G.outcome==="win") win(); else lose(G._loseReason||"reasons lost to the sea"); }
+
+/* ============================== RENDER ROUTER ============================== */
+function render(){
+  INPUT_MODE = null;
+  crt.classList.remove("screen-in"); void crt.offsetWidth; crt.classList.add("screen-in");
+  switch(G.screen){
+    case "title":   return titleScreen();
+    case "setup":   return setupScreen();
+    case "crew":    return crewScreen();
+    case "outfit":  return outfitScreen();
+    case "travel":  return travelScreen();
+    case "event":   return eventScreen();
+    case "combat":  return combatScreen();
+    case "store":   return storeScreen();
+    case "log":     return logScreen();
+    case "ledger":  return ledgerScreen();
+    case "end":     return endScreen();
+  }
+}
+
+/* ------------------------------ TITLE ------------------------------ */
+function titleScreen(){
+  const ship =
+`                    |    |    |
+                   )_)  )_)  )_)
+                  )___))___))___)\\
+                 )____)____)_____)\\\\
+               _____|____|____|____\\\\\\__
+      ~~~~~~~~~\\                    /~~~~~~~~~~~
+    ~~~  ~~~~~~ \\__________________/ ~~~~ ~~ ~~~
+   ~~~ ~~~~~ ~~~~~ ~~~~~~~ ~~~~~ ~~~~~~~ ~~~~ ~~~~`;
+  crt.innerHTML = `
+    <div class="center">
+      <pre class="dim titleship" style="font-size:clamp(6px,1.9vw,13px)">${ship}</pre>
+      <h1 class="big">DEAD MAN'S TRAIL</h1>
+      <p class="sub">A FIZZ-FUELLED VOYAGE · MMXXVI</p>
+      <p class="fs22 dim" style="margin-top:18px">Sail from Tortuga to ${DEST}.<br>Keep yer crew fed, yer barrels full, and yer hull afloat.</p>
+    </div>
+    <div class="flex"></div>
+    ${setMenu([
+      {label:"Set sail (new voyage)", fn:()=>{G.screen="setup";render();}},
+      {label:"Hall of legends (high scores)", fn:()=>{G.screen="ledger";render();}},
+      {label:"How to survive the sea", fn:()=>helpScreen()},
+    ])}
+    <p class="hint">Tip: click a choice — or press its number key, like the old machines.</p>
+  `;
+  bindMenu();
+}
+function helpScreen(){
+  crt.innerHTML = `
+    <h2 class="fs28 bright">THE WAYS OF THE SEA</h2>
+    <div class="body dim" style="font-size:21px">
+      <p>· Every league eats <b class="bright">rations</b> and <b class="bright">Fathom Fizz</b>. Run dry and the crew sickens or mutinies.</p>
+      <p>· <b class="bright">Fathom Fizz</b> is the crew's fizzy pick-me-up — it keeps <b class="bright">morale</b> up. Low morale breeds mutiny.</p>
+      <p>· <b class="bright">Hull</b> takes storms and cannon fire. At 0%, ye feed the fish.</p>
+      <p>· <b class="bright">Doubloons</b> buy supplies at port. Earn 'em by raiding and treasure.</p>
+      <p>· Choose yer <b class="bright">pace</b>, <b class="bright">rations</b>, and <b class="bright">fizz</b> wisely each leg.</p>
+      <p>· A pirate dies of scurvy, fever, thirst, storms, kraken, or a musket ball. Sail careful.</p>
+    </div>
+    ${setMenu([{label:"Back", fn:()=>{G.screen="title";render();}}])}
+  `;
+  bindMenu();
+}
+
+/* ------------------------------ SETUP ------------------------------ */
+function setupScreen(){
+  crt.innerHTML = `
+    <h2 class="fs28 bright">MUSTER AT TORTUGA</h2>
+    <div class="body">
+      <p class="fs22">What be yer name, captain?</p>
+      <p><input id="cap" maxlength="16" placeholder="Captain..." autocomplete="off"></p>
+      <p class="fs22" style="margin-top:14px">And what do ye christen yer ship?</p>
+      <p><span class="dim">The </span><input id="shp" maxlength="18" placeholder="Sea Wench" autocomplete="off"></p>
+    </div>
+    ${setMenu([{label:"Continue", fn:submitSetup}])}
+    <p class="hint">Press Enter or pick 1 when ready.</p>
+  `;
+  bindMenu();
+  INPUT_MODE = true;
+  const cap = crt.querySelector('#cap'), shp = crt.querySelector('#shp');
+  cap.focus();
+  const submit=(e)=>{ if(e.key==="Enter"){ e.preventDefault(); submitSetup(); } };
+  cap.addEventListener('keydown',submit); shp.addEventListener('keydown',submit);
+}
+function submitSetup(){
+  const cap = crt.querySelector('#cap').value.trim();
+  const shp = crt.querySelector('#shp').value.trim();
+  G.captain = cap || "Captain No-Name";
+  G.ship = shp || "Sea Wench";
+  professionScreen();
+}
+function professionScreen(){
+  INPUT_MODE=null;
+  crt.innerHTML = `
+    <h2 class="fs28 bright">WHAT MANNER OF PIRATE ARE YE?</h2>
+    <p class="dim fs22">Yer past decides the coin ye start with — and how hard the sea will judge ye.</p>
+    <div class="flex"></div>
+    ${setMenu(PROFESSIONS.map(p=>({
+      label:`${p.name} — ${p.gold} doubloons <span class="tag">${p.note}</span>`,
+      fn:()=>{ G.prof=p; G.doubloons=p.gold; G.screen="crew"; render(); }
+    })))}
+  `;
+  bindMenu();
+}
+
+/* ------------------------------ CREW ------------------------------ */
+function crewScreen(){
+  if(G.crew.length===0){
+    const names = [...CREW_POOL];
+    for(let i=0;i<4;i++){
+      const n = names.splice(rint(0,names.length-1),1)[0];
+      G.crew.push({name:n, alive:true, status:"hale"});
+    }
+  }
+  const list = G.crew.map((c,i)=>`<p class="crewline">☠ <input id="cn${i}" value="${c.name}" maxlength="16" autocomplete="off"></p>`).join("");
+  crt.innerHTML = `
+    <h2 class="fs28 bright">SIGN THE ARTICLES</h2>
+    <p class="dim fs22">Four souls throw in with ye. Name 'em, or keep the ones the sea sent.</p>
+    <div class="body">${list}</div>
+    ${setMenu([
+      {label:"These are my crew", fn:saveCrew},
+      {label:"Roll new rascals", fn:()=>{G.crew=[];render();}},
+    ])}
+  `;
+  bindMenu(); INPUT_MODE=true;
+  crt.querySelector('#cn0').focus();
+}
+function saveCrew(){
+  G.crew.forEach((c,i)=>{ const v=crt.querySelector('#cn'+i).value.trim(); if(v)c.name=v; });
+  G.screen="outfit"; render();
+}
+
+/* ------------------------------ OUTFIT / STORE ------------------------------ */
+const STORE_PRICES = { rations:2, rum:3, cannonballs:6, hull:4 }; // hull = per 5% repair
+function outfitScreen(){
+  G.portName = "Tortuga";
+  storeRender(true);
+}
+function storeScreen(){ storeRender(false); }
+function storeRender(isOutfit){
+  const p = STORE_PRICES;
+  crt.innerHTML = `
+    <h2 class="fs28 bright">${isOutfit?"OUTFIT AT TORTUGA":"PORT OF "+G.portName.toUpperCase()}</h2>
+    <p class="dim fs22">${isOutfit?"Stock the hold before ye leave. Ye'll want plenty.":"A friendly harbor. Spend yer plunder wisely."}</p>
+    <div class="row" style="margin:6px 0"><span>Doubloons in purse:</span><span class="bright">${G.doubloons}</span></div>
+    <hr>
+    <div class="body fs21">
+      <div class="row"><span>Rations (${p.rations}db each)</span><span>hold: ${Math.floor(G.rations)}</span></div>
+      <div class="row"><span>Barrels of Fathom Fizz (${p.rum}db each)</span><span>hold: ${Math.floor(G.rum)}</span></div>
+      <div class="row"><span>Cannonballs (${p.cannonballs}db each)</span><span>hold: ${G.cannonballs}</span></div>
+      <div class="row"><span>Hull repair (${p.hull}db per 5%)</span><span>hull: ${Math.round(G.hull)}%</span></div>
+    </div>
+    ${setMenu([
+      {label:"Buy rations", fn:()=>buyMenu("rations")},
+      {label:"Buy Fathom Fizz", fn:()=>buyMenu("rum")},
+      {label:"Buy cannonballs", fn:()=>buyMenu("cannonballs")},
+      {label:"Repair hull", fn:()=>buyMenu("hull")},
+      {label: isOutfit?"Weigh anchor — set sail!":"Back to the sea", fn:()=>{ G.atPort=false; G.screen="travel"; render(); }},
+    ])}
+  `;
+  bindMenu();
+}
+function buyMenu(kind){
+  const price = STORE_PRICES[kind];
+  const label = {rations:"rations",rum:"barrels of Fathom Fizz",cannonballs:"cannonballs",hull:"hull repairs (5% each)"}[kind];
+  const amounts = kind==="hull" ? [1,3,5] : [5,10,25];
+  const opts = amounts.map(a=>{
+    const cost=a*price;
+    return {label:`${kind==="hull"? a*5+"% hull" : a+" "+label} — ${cost}db ${cost>G.doubloons?'<span class="danger">(too dear)</span>':''}`,
+      fn:()=>{ if(cost<=G.doubloons){ G.doubloons-=cost; applyBuy(kind,a);} storeRender(!G.atPort && G.portName==="Tortuga"); }};
+  });
+  opts.push({label:"Never mind", fn:()=>storeRender(!G.atPort && G.portName==="Tortuga")});
+  crt.innerHTML = `
+    <h2 class="fs28 bright">BUY ${label.toUpperCase()}</h2>
+    <div class="row"><span>Purse:</span><span class="bright">${G.doubloons} doubloons</span></div>
+    <div class="flex"></div>
+    ${setMenu(opts)}
+  `;
+  bindMenu();
+}
+function applyBuy(kind,a){
+  if(kind==="hull"){ G.hull=clamp(G.hull+a*5,0,100); }
+  else if(kind==="rations"){ G.rations+=a; }
+  else if(kind==="rum"){ G.rum+=a; }
+  else if(kind==="cannonballs"){ G.cannonballs+=a; }
+}
+
+/* ============================== VISUAL FX ============================== */
+const SHIP_SMALL =
+`     |    |    |
+    )_)  )_)  )_)
+   )___))___))___)\\
+  )____)____)_____)\\\\
+_____|____|____|_____\\\\\\__
+ \\                    /`;
+const SHIP_FAR =
+`  |\\
+  |_\\
+__|__\\
+\\____/`;
+const TENTACLE =
+` _
+( \\
+ \\ \\
+ ) )
+( (
+ \\ \\`;
+function seaScene(o){
+  o=o||{};
+  const h = o.tall?225 : o.mini?115 : 145;
+  return `<div class="sea" style="height:${h}px">
+    <div class="sun"></div>
+    ${o.palm?`<pre class="palm">_\\|/_
+  |
+  |</pre>`:''}
+    ${(o.otherShip||o.ghost)?`<pre class="farship${o.ghost?' ghostship':''}">${SHIP_FAR}</pre>`:''}
+    ${o.tentacles?`<pre class="tent t1">${TENTACLE}</pre><pre class="tent t2">${TENTACLE}</pre>`:''}
+    <div class="shipwrap${o.sink?' sinking':''}"><pre class="shipart" style="font-size:${o.tall?12:9}px">${SHIP_SMALL}</pre></div>
+    <div class="wave w1"></div>
+    <div class="wave w2"></div>
+    ${o.rain?`<div class="rainfx"></div><div class="boltfx"></div>`:''}
+  </div>`;
+}
+function eventFx(title){
+  if(title.indexOf("\u26c8")>=0) return {rain:true};
+  if(title.indexOf("\ud83e\udd91")>=0) return {tentacles:true};
+  if(title.indexOf("\ud83d\udc7b")>=0) return {ghost:true};
+  if(title.indexOf("\ud83c\udff4")>=0||title.indexOf("\u2693")>=0) return {otherShip:true};
+  if(title.indexOf("\ud83c\udfdd")>=0) return {palm:true};
+  return {};
+}
+function fxFlash(kind){
+  const scr=document.querySelector(".screen"); if(!scr) return;
+  const d=document.createElement("div"); d.className="flashfx "+kind;
+  scr.appendChild(d); setTimeout(function(){ d.remove(); },700);
+}
+function shakeScreen(){
+  const scr=document.querySelector(".screen"); if(!scr) return;
+  scr.classList.remove("shakefx"); void scr.offsetWidth; scr.classList.add("shakefx");
+  setTimeout(function(){ scr.classList.remove("shakefx"); },500);
+}
+function showSailing(dist, days){
+  INPUT_MODE=null; OPTIONS=[];
+  crt.classList.remove("screen-in"); void crt.offsetWidth; crt.classList.add("screen-in");
+  crt.innerHTML = `
+    ${statusBar()}
+    ${seaScene({tall:true})}
+    <p class="fs22 center" style="margin-top:12px">The <span class="bright">${G.ship}</span> makes <span class="bright">${dist} leagues</span> over ${days} day${days>1?"s":""}\u2026</p>
+    <p class="center dim fs22 sailing-dots"><span>\u25cf</span><span>\u25cf</span><span>\u25cf</span></p>
+    <p class="hint center">tap anywhere to continue</p>`;
+  const go = function(){ clearTimeout(t); crt.removeEventListener("click", go); G.screen="event"; render(); };
+  const t = setTimeout(go, 2400);
+  crt.addEventListener("click", go);
+}
+
+/* ------------------------------ TRAVEL ------------------------------ */
+const PACE = {
+  grueling:{leagues:[80,110], food:1.5, wear:8,  label:"Grueling — run 'em ragged"},
+  steady:  {leagues:[55,80],  food:1.0, wear:4,  label:"Steady — a fair clip"},
+  leisurely:{leagues:[30,55], food:0.7, wear:2,  label:"Leisurely — easy sailing"},
+};
+const FOOD = { filling:{mult:1.4,mor:+2}, meager:{mult:1.0,mor:0}, bare:{mult:0.6,mor:-2} };
+const GROG = { generous:{rum:3,mor:+5}, meager:{rum:1.5,mor:+1}, dry:{rum:0,mor:-7} };
+
+function travelScreen(){
+  crt.innerHTML = `
+    ${statusBar()}
+    ${progressLine()}
+    <div class="body">
+      <p class="fs22">The <span class="bright">${G.ship}</span> rides the swell under Captain <span class="bright">${G.captain}</span>.</p>
+      <div class="row dim"><span>Pace:</span><span>${cap1(G.pace)}</span></div>
+      <div class="row dim"><span>Rations:</span><span>${cap1(G.food)}</span></div>
+      <div class="row dim"><span>Fizz ration:</span><span>${cap1(G.grog)}</span></div>
+    </div>
+    ${setMenu([
+      {label:"Sail on ⛵", fn:sailOn},
+      {label:"Set the pace", fn:()=>settingMenu("pace")},
+      {label:"Set the rations", fn:()=>settingMenu("food")},
+      {label:"Set the fizz", fn:()=>settingMenu("grog")},
+      {label:"Muster the crew (ship's log)", fn:()=>{G.screen="log";render();}},
+    ])}
+  `;
+  bindMenu();
+}
+function cap1(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function settingMenu(which){
+  let opts;
+  if(which==="pace") opts = Object.keys(PACE).map(k=>({label:PACE[k].label, fn:()=>{G.pace=k;G.screen="travel";render();}}));
+  if(which==="food") opts = [
+    {label:"Filling — eat hearty",fn:()=>{G.food="filling";G.screen="travel";render();}},
+    {label:"Meager — enough to work",fn:()=>{G.food="meager";G.screen="travel";render();}},
+    {label:"Bare bones — tighten belts",fn:()=>{G.food="bare";G.screen="travel";render();}},
+  ];
+  if(which==="grog") opts = [
+    {label:"Generous — fizz flows free",fn:()=>{G.grog="generous";G.screen="travel";render();}},
+    {label:"Meager — a daily cupful",fn:()=>{G.grog="meager";G.screen="travel";render();}},
+    {label:"Dry ship — no fizz at all",fn:()=>{G.grog="dry";G.screen="travel";render();}},
+  ];
+  opts.push({label:"Back",fn:()=>{G.screen="travel";render();}});
+  crt.innerHTML = `<h2 class="fs28 bright">${which==="pace"?"SET THE PACE":which==="food"?"SET THE RATIONS":"SET THE FIZZ"}</h2>
+    <div class="flex"></div>${setMenu(opts)}`;
+  bindMenu();
+}
+
+function sailOn(){
+  const p = PACE[G.pace];
+  const wind = 0.6 + Math.random()*0.9;               // 0.6–1.5
+  let dist = Math.round(rint(p.leagues[0],p.leagues[1]) * wind);
+  const days = clamp(Math.round(dist/22),1,6);
+
+  // consume supplies over the leg
+  const crewN = Math.max(1,livingCrew().length);
+  const foodNeed = crewN * p.food * FOOD[G.food].mult * days;
+  const rumNeed  = GROG[G.grog].rum * days;
+
+  let starved=false, dryRun=false;
+  if(G.rations>=foodNeed){ G.rations-=foodNeed; } else { G.rations=0; starved=true; }
+  if(G.rum>=rumNeed){ G.rum-=rumNeed; } else { G.rum=0; if(G.grog!=="dry") dryRun=true; }
+
+  // morale + hull
+  G.morale = clamp(G.morale + FOOD[G.food].mor + GROG[G.grog].mor, 0, 100);
+  if(starved) G.morale=clamp(G.morale-8,0,100);
+  if(dryRun)  G.morale=clamp(G.morale-6,0,100);
+  G.hull = clamp(G.hull - p.wear*(0.5+Math.random()), 0, 100);
+
+  G.league += dist;
+  G.day += days;
+
+  // health effects from starvation / no grog
+  G.deaths=[];
+  const notes=[];
+  if(starved){
+    notes.push("The hold ran empty. Bellies growl and gums bleed — scurvy creeps in.");
+    livingCrew().forEach(c=>{ if(chance(0.25)) sicken(c,"scurvy"); });
+  }
+  if(G.morale<20){
+    notes.push("Morale is at the bottom of the barrel. The crew mutters of mutiny.");
+  }
+  resolveSick(notes);
+
+  // check hull/crew death before events
+  if(G.hull<=0) return lose("yer hull gave way and the sea swallowed the ship whole");
+  if(livingCrew().length===0) return lose("every last soul aboard perished — a ghost ship drifts on");
+
+  // win?
+  if(G.league>=LEAGUES_TOTAL){ G.league=LEAGUES_TOTAL; return win(); }
+
+  // roll event
+  const ev = rollEvent();
+  if(ev){
+    G.event = ev; G.event._notes = notes; showSailing(dist, days);
+  } else {
+    // quiet leg
+    G.event = { title:"A quiet stretch of sea", text: notes.length?notes.join(" "):pick([
+      "Fair winds and empty horizons. The ship makes good way.",
+      "Naught but gulls and grey water. The crew mends sail and sharpens steel.",
+      "The sea lies calm as a millpond. Someone strikes up a low shanty.",
+    ]), choices:[{label:"Sail on", fn:()=>{G.screen="travel";render();}}] };
+    showSailing(dist, days);
+  }
+}
+
+function sicken(c,ill){ if(c.status==="hale"){ c.status=ill; } }
+function resolveSick(notes){
+  livingCrew().forEach(c=>{
+    if(c.status!=="hale"){
+      // chance to worsen (die) or recover
+      const care = (G.rations>5?0.15:0) + (G.rum>3?0.1:0);
+      if(chance(0.18 - care)){
+        c.alive=false; G.deaths.push({name:c.name,cause:c.status});
+      } else if(chance(0.4)){
+        c.status="hale";
+      }
+    }
+  });
+  G.deaths.forEach(d=>{
+    notes.push(`<span class="danger">${d.name} has died of ${prettyIll(d.cause)}.</span>`);
+    G.morale=clamp(G.morale-10,0,100);
+  });
+}
+function prettyIll(s){return {scurvy:"scurvy",fever:"the fever",flux:"the bloody flux",drink:"too much fizz"}[s]||s;}
+
+/* ------------------------------ EVENTS ------------------------------ */
+function rollEvent(){
+  if(!chance(0.82)) return null;
+  const pool = EVENTS.filter(e=>!e.when || e.when());
+  // weight
+  const bag=[];
+  pool.forEach(e=>{ for(let i=0;i<(e.w||1);i++) bag.push(e); });
+  return pick(bag).make();
+}
+
+const EVENTS = [
+  // STORM
+  { w:3, make(){
+    const dmg = rint(12,30);
+    return {
+      title:"⛈ A TEMPEST!", text:"Black clouds boil over and the sea rears up like a beast. Rain lashes the deck.",
+      choices:[
+        {label:"Batten down and ride it out", fn:()=>{
+          G.hull=clamp(G.hull-dmg,0,100);
+          let msg=`The storm claws ${dmg}% from the hull.`;
+          if(chance(0.3)){ const c=pick(livingCrew()); if(c){c.alive=false; G.deaths.push({name:c.name}); msg+=` A wave takes <span class="danger">${c.name}</span> overboard, gone to the deep.`;} }
+          resultScreen("⛈ THE STORM PASSES", msg);
+        }},
+        {label:"Cut cargo to lighten her", fn:()=>{
+          const lost=Math.min(G.rations,rint(6,14)); G.rations-=lost;
+          G.hull=clamp(G.hull-Math.round(dmg*0.5),0,100);
+          resultScreen("⛈ THE STORM PASSES", `Ye heave ${Math.round(lost)} rations to the waves. The lighter ship rides easier — only ${Math.round(dmg*0.5)}% hull lost.`);
+        }},
+      ]};
+  }},
+  // MERCHANT
+  { w:3, make(){
+    const loot = rint(120,320), balls = rint(2,5);
+    return {
+      title:"⚓ A FAT MERCHANTMAN", text:"A plump trading galleon wallows on the horizon, low in the water with cargo. Easy pickings... if ye dare.",
+      choices:[
+        {label:"Raise the black flag and attack!", fn:()=>startCombat({name:"Merchant Galleon",hull:60,fire:10,loot,balls,flee:0.5})},
+        {label:"Hail them and trade peacefully", fn:()=>{
+          const cost=rint(30,80); const got=rint(6,14);
+          G.doubloons=clamp(G.doubloons-cost,0,1e9); G.rations+=got; G.morale=clamp(G.morale+3,0,100);
+          resultScreen("⚓ HONEST TRADE", `Ye barter ${cost} doubloons for ${got} rations. The crew grumbles at yer mercy, but the larder's fuller.`);
+        }},
+        {label:"Let them pass", fn:()=>resultScreen("⚓ SHIPS IN THE NIGHT","Ye let the prize slip by. Some of the crew spit at yer feet.",()=>{G.morale=clamp(G.morale-4,0,100);})},
+      ]};
+  }},
+  // NAVY
+  { w:2, make(){
+    return {
+      title:"🏴 THE KING'S NAVY!", text:"A naval frigate spots yer colors and gives chase, gunports opening like a row of teeth.",
+      choices:[
+        {label:"Stand and fight", fn:()=>startCombat({name:"Navy Frigate",hull:95,fire:22,loot:rint(80,180),balls:rint(3,6),flee:0.3})},
+        {label:"Run before the wind", fn:()=>{
+          if(chance(0.55)){ resultScreen("🏴 CLEAN AWAY","Ye crowd on every sail and lose 'em in a squall. Close one."); }
+          else { const d=rint(15,30); G.hull=clamp(G.hull-d,0,100); resultScreen("🏴 CHASED DOWN",`Their bow-chasers rake ye as ye flee — ${d}% hull lost — but ye break contact at last.`); }
+        }},
+      ]};
+  }},
+  // BECALMED
+  { w:2, make(){
+    const days=rint(2,5);
+    return { title:"🌊 BECALMED", text:`The wind dies to nothing. Sails hang limp and the ${G.ship} sits like a cork on glass.`,
+      choices:[{label:`Wait for wind (${days} days)`, fn:()=>{
+        G.day+=days; const food=Math.min(G.rations,livingCrew().length*days); G.rations-=food; G.morale=clamp(G.morale-days*2,0,100);
+        resultScreen("🌊 THE WIND RETURNS",`Ye drift ${days} days, chewing through ${Math.round(food)} rations for nothing. At last a breeze fills the canvas.`);
+      }},
+      {label:"Break out the oars and row", fn:()=>{
+        G.league+=rint(10,25); G.morale=clamp(G.morale-6,0,100); G.day+=1;
+        resultScreen("🌊 HEAVE, YE DOGS","Backs bend to the sweeps. Ye claw a few leagues onward, cursing every stroke.");
+      }}]};
+  }},
+  // SCURVY
+  { w:2, when:()=>livingCrew().some(c=>c.status==="hale"), make(){
+    const c=pick(livingCrew().filter(x=>x.status==="hale")); 
+    return { title:"🩸 SICKNESS BELOW DECKS", text:`${c.name} is pale and swollen-gummed. Scurvy has come aboard.`,
+      choices:[
+        {label:"Dose 'em with the last limes (5 rations)", fn:()=>{
+          if(G.rations>=5){ G.rations-=5; c.status="hale"; resultScreen("🩸 ON THE MEND",`Sour limes do their work. ${c.name} rallies.`); }
+          else resultScreen("🩸 NOTHING TO GIVE",`No limes to spare. ${c.name} takes a turn for the worse.`,()=>{c.status="scurvy";});
+        }},
+        {label:"A fizzy tonic'll fix anything (2 Fizz)", fn:()=>{
+          if(G.rum>=2){ G.rum-=2; if(chance(0.4)){c.status="hale"; resultScreen("🩸 FIZZED UP",`A crackling tonic — ${c.name} perks right back up.`);} else {c.status="scurvy"; resultScreen("🩸 NO BETTER",`Sweet fizz cheers the tongue but mends no gums. ${c.name} worsens.`);} }
+          else resultScreen("🩸 DRY","Not a drop left. The sickness sets in.",()=>{c.status="scurvy";});
+        }},
+        {label:"Leave it to Providence", fn:()=>resultScreen("🩸 IN GOD'S HANDS",`Ye do nothing. ${c.name} shivers in a hammock.`,()=>{c.status="scurvy";})},
+      ]};
+  }},
+  // REEF
+  { w:2, make(){
+    return { title:"🪨 REEF AHEAD!", text:"White water breaks over hidden rocks dead ahead. The lookout screams a warning.",
+      choices:[
+        {label:"Hard to starboard!", fn:()=>{
+          if(chance(0.65)) resultScreen("🪨 CLEAR!","The ship heels hard and slides past the teeth of the reef. Not a plank scratched.");
+          else { const d=rint(18,34); G.hull=clamp(G.hull-d,0,100); resultScreen("🪨 SCRAPED HER KEEL",`A grinding crunch — ${d}% hull torn away — but ye stagger free.`); }
+        }},
+        {label:"Sound a passage slow and careful", fn:()=>{
+          G.day+=1; const d=rint(4,12); G.hull=clamp(G.hull-d,0,100);
+          resultScreen("🪨 THREADED THE NEEDLE",`Losing a day and ${d}% hull, ye pick a slow path through. Steady does it.`);
+        }},
+      ]};
+  }},
+  // TREASURE MAP
+  { w:1, make(){
+    return { title:"🍾 A BOTTLE ON THE TIDE", text:"A sealed bottle bobs alongside. Inside — a scrap of map marked with a red X.",
+      choices:[
+        {label:"Chase the X (costs 2 days)", fn:()=>{
+          G.day+=2;
+          if(chance(0.6)){ const g=rint(150,400); G.doubloons+=g; G.morale=clamp(G.morale+8,0,100); resultScreen("🍾 BURIED PLUNDER!",`Ye dig up a rotted chest — ${g} doubloons of Spanish gold! The crew cheers yer name.`);}
+          else resultScreen("🍾 A FOOL'S ERRAND","Ye dig all day and find naught but a dead man's boot. The crew ain't pleased.",()=>{G.morale=clamp(G.morale-5,0,100);});
+        }},
+        {label:"Toss it back — a trap, surely", fn:()=>resultScreen("🍾 LEFT IT BE","Ye let the bottle drift on. Some tales are best left untold.")},
+      ]};
+  }},
+  // KRAKEN
+  { w:1, make(){
+    return { title:"🦑 THE DEEP STIRS", text:"The water goes black and still. Then a tentacle thick as a mast rises dripping beside the hull...",
+      choices:[
+        {label:"Fire everything into the beast!", fn:()=>{
+          if(G.cannonballs>=3){ G.cannonballs-=3; if(chance(0.6)){ resultScreen("🦑 DRIVEN OFF","A broadside straight down its maw! The kraken shrieks and sinks back to the deep."); } else { const d=rint(20,40); G.hull=clamp(G.hull-d,0,100); const c=pick(livingCrew()); if(c&&chance(0.5)){c.alive=false;G.deaths.push({name:c.name});} resultScreen("🦑 IT STRIKES BACK",`The beast crushes ${d}% of the hull${G.deaths.length?` and drags <span class="danger">${G.deaths[0].name}</span> under`:''} before slipping away.`);} }
+          else resultScreen("🦑 NO SHOT","Not enough shot in the locker! Ye can only hack at it with cutlasses.",()=>{const d=rint(25,45);G.hull=clamp(G.hull-d,0,100);});
+        }},
+        {label:"Hold still and pray", fn:()=>{
+          if(chance(0.45)) resultScreen("🦑 IT PASSES","Not a soul breathes. The tentacle slides back beneath the waves and is gone.");
+          else { const d=rint(25,45); G.hull=clamp(G.hull-d,0,100); resultScreen("🦑 SEIZED",`It wraps the ship and squeezes — ${d}% hull buckled — before losing interest.`); }
+        }},
+      ]};
+  }},
+  // CAROUSING OVERBOARD (slapstick, only if fizz generous)
+  { w:1, when:()=>G.grog==="generous"&&livingCrew().length>1, make(){
+    const c=pick(livingCrew());
+    return { title:"🎉 CAROUSING ON DECK", text:`The Fathom Fizz flowed free tonight and the crew's fair giddy. ${c.name}, hooting and hollering, is dancing on the gunwale...`,
+      choices:[
+        {label:"Haul 'em back to safety", fn:()=>{
+          if(chance(0.75)) resultScreen("🎉 SAVED THE FOOL",`Ye grab ${c.name} by the collar just in time. Everyone has a good laugh — morale up.`,()=>{G.morale=clamp(G.morale+5,0,100);});
+          else { c.alive=false; G.deaths.push({name:c.name}); resultScreen("🌊 GONE OVERBOARD",`Too late — <span class="danger">${c.name} tumbles into the black water</span> and is lost. A grim quiet falls.`,()=>{G.morale=clamp(G.morale-8,0,100);}); }
+        }},
+        {label:"Let 'em dance — good for morale", fn:()=>{
+          if(chance(0.5)){ G.morale=clamp(G.morale+8,0,100); resultScreen("🎉 WHAT A NIGHT","The crew laughs and sings till dawn. Best morale in weeks.");}
+          else { c.alive=false; G.deaths.push({name:c.name}); resultScreen("🌊 A SPLASH IN THE DARK",`${c.name} misses a step. <span class="danger">Gone.</span> The party dies with 'em.`,()=>{G.morale=clamp(G.morale-6,0,100);}); }
+        }},
+      ]};
+  }},
+  // FRIENDLY PORT
+  { w:2, make(){
+    const port = pick(["Port Royal","Nassau","Nombre de Dios","Petit-Goâve","Isla Perla"]);
+    return { title:"🏝 LAND HO — "+port.toUpperCase(), text:`A friendly harbor opens up. Ye could put in to trade, repair, and water the ship.`,
+      choices:[
+        {label:"Put into port", fn:()=>{ G.portName=port; G.atPort=true; G.morale=clamp(G.morale+4,0,100); G.screen="store"; render(); }},
+        {label:"Sail past — no time to waste", fn:()=>resultScreen("🏝 ONWARD","Ye keep the prow pointed to open sea.")},
+      ]};
+  }},
+  // SHANTY / MORALE
+  { w:1, make(){
+    return { title:"🎶 A NIGHT OF SHANTIES", text:"Someone finds a fiddle. Before long the whole deck stamps and sings under the stars.",
+      choices:[{label:"Join the song", fn:()=>resultScreen("🎶 SPIRITS LIFTED","The ship rings with music. Morale soars.",()=>{G.morale=clamp(G.morale+10,0,100);})},
+      {label:"Order 'em to their posts", fn:()=>resultScreen("🎶 KILLJOY","Ye send 'em back to work. Discipline holds, but the mood sours.",()=>{G.morale=clamp(G.morale-3,0,100);})}]};
+  }},
+  // GHOST SHIP
+  { w:1, make(){
+    return { title:"👻 A DERELICT", text:"A rotting hulk drifts crewless in the fog, sails in tatters. Something glints in her hold.",
+      choices:[
+        {label:"Board her and search", fn:()=>{
+          if(chance(0.55)){ const g=rint(60,200); G.doubloons+=g; resultScreen("👻 CURSED GOLD",`Ye haul off ${g} doubloons from the dead ship. The crew won't meet yer eye.`);}
+          else { const c=pick(livingCrew()); if(c)c.status="fever"; resultScreen("👻 PLAGUE SHIP","She was a plague ship. Whatever killed her crew now stalks yer own.",()=>{}); }
+        }},
+        {label:"Leave the dead to the dead", fn:()=>resultScreen("👻 GIVE HER A WIDE BERTH","Ye steer well clear. Wise, perhaps.")},
+      ]};
+  }},
+];
+
+function eventScreen(){
+  const e=G.event;
+  const notes = (e._notes&&e._notes.length)? `<div class="narr dim">${e._notes.join("<br>")}</div>`:"";
+  crt.innerHTML = `
+    ${statusBar()}
+    ${seaScene(Object.assign({mini:true}, eventFx(e.title)))}
+    <h2 class="fs28 bright">${e.title}</h2>
+    ${notes}
+    <div class="narr">${e.text}</div>
+    <div class="flex"></div>
+    ${setMenu(e.choices)}
+  `;
+  bindMenu();
+}
+function resultScreen(title,msg,after){
+  if(after) after();
+  // resolve any deaths that occurred inside the effect
+  const deathNotes = G.deaths&&G.deaths.length ? "<br>"+G.deaths.map(d=>`<span class="danger">${d.name} is lost to the sea.</span>`).join("<br>") : "";
+  // check terminal states
+  const terminal = (fn)=>fn;
+  crt.innerHTML = `
+    ${statusBar()}
+    <h2 class="fs28 bright">${title}</h2>
+    <div class="narr">${msg}</div>
+    <div class="flex"></div>
+    ${setMenu([{label:"Continue", fn:()=>{
+      G.deaths=[];
+      if(G.hull<=0) return lose("the hull failed and the sea claimed all aboard");
+      if(livingCrew().length===0) return lose("the last of the crew perished");
+      if(G.league>=LEAGUES_TOTAL) return win();
+      G.screen="travel"; render();
+    }}])}
+  `;
+  bindMenu();
+}
+
+/* ------------------------------ COMBAT ------------------------------ */
+function startCombat(enemy){
+  G.combat = { enemy, myTurn:true, log:[], aim:null };
+  G.screen="combat"; render();
+}
+function combatScreen(){
+  const c=G.combat, e=c.enemy;
+  const enemyHullPct = Math.max(0,e.hull);
+  crt.innerHTML = `
+    ${statusBar()}
+    <h2 class="fs28 bright">⚔ BATTLE: ${e.name.toUpperCase()}</h2>
+    <div class="row"><span>Enemy hull</span><span>${Math.round(enemyHullPct)}%</span></div>
+    <div class="bar dng" style="width:100%"><i style="width:${clamp(enemyHullPct,0,100)}%"></i></div>
+    <div class="row" style="margin-top:8px"><span>Yer hull</span><span>${Math.round(G.hull)}%</span></div>
+    <div class="bar" style="width:100%"><i style="width:${clamp(G.hull,0,100)}%"></i></div>
+    <div class="narr dim" id="clog" style="min-height:60px">${c.log.slice(-3).join("<br>")||"The two ships close for the kill. Load yer guns."}</div>
+    <div id="combatControls"></div>
+  `;
+  combatControls();
+}
+function combatControls(){
+  const c=G.combat;
+  const box=crt.querySelector("#combatControls");
+  if(c.aim){ return; }
+  box.innerHTML = setMenu([
+    {label:`Fire cannons (${G.cannonballs} shot left)`, fn:startAim},
+    {label:"Board them! (risky, no shot needed)", fn:boardThem},
+    {label:"Attempt to flee", fn:fleeCombat},
+  ]);
+  bindMenu();
+}
+function startAim(){
+  if(G.cannonballs<=0){ pushLog('<span class="danger">The shot locker is empty!</span>'); enemyTurn(); return; }
+  const c=G.combat; c.aim=true;
+  const box=crt.querySelector("#combatControls");
+  const zoneL = rint(20,55), zoneW=22, critL=zoneL+zoneW/2-6;
+  box.innerHTML = `
+    <p class="fs22">Fire when the light crosses the mark! <span class="dim">(space or tap FIRE)</span></p>
+    <div class="aim" id="aimbar">
+      <div class="zone" style="left:${zoneL}%;width:${zoneW}%"></div>
+      <div class="zone crit" style="left:${critL}%;width:12%"></div>
+      <div class="marker" id="marker"></div>
+    </div>
+    ${setMenu([{label:"🔥 FIRE!", fn:()=>fireNow(zoneL,zoneW,critL)}])}
+  `;
+  bindMenu();
+  const keyFire=(e)=>{ if(e.code==="Space"){ e.preventDefault(); fireNow(zoneL,zoneW,critL);} };
+  document.addEventListener("keydown",keyFire,{once:true});
+  G.combat._keyFire=keyFire;
+}
+function fireNow(zoneL,zoneW,critL){
+  const c=G.combat; if(!c.aim) return; c.aim=false;
+  const marker=crt.querySelector("#marker");
+  const bar=crt.querySelector("#aimbar");
+  let pos=50;
+  if(marker&&bar){
+    const m=marker.getBoundingClientRect(), b=bar.getBoundingClientRect();
+    pos = ((m.left - b.left)/b.width)*100;
+  }
+  G.cannonballs--;
+  fxFlash("fire"); shakeScreen();
+  let dmg, note;
+  if(pos>=critL && pos<=critL+12){ dmg=rint(28,42); note=`<span class="bright">A perfect broadside — ${dmg}% dealt!</span>`; }
+  else if(pos>=zoneL && pos<=zoneL+zoneW){ dmg=rint(14,24); note=`A solid hit — ${dmg}% dealt.`; }
+  else { dmg=rint(0,8); note= dmg? `A glancing shot — only ${dmg}%.`:`<span class="danger">Missed clean into the waves!</span>`; }
+  c.enemy.hull-=dmg;
+  pushLog(note);
+  if(c.enemy.hull<=0) return winCombat();
+  enemyTurn();
+}
+function boardThem(){
+  const c=G.combat;
+  pushLog("Grappling hooks fly — steel meets steel across the rail!");
+  shakeScreen();
+  const strength = livingCrew().length + (G.morale>50?1:0);
+  if(chance(clamp(0.35+strength*0.08,0,0.85))){
+    c.enemy.hull=0; return winCombat(true);
+  } else {
+    const victim=pick(livingCrew());
+    if(victim && chance(0.6)){ victim.alive=false; G.deaths.push({name:victim.name}); pushLog(`<span class="danger">${victim.name} is cut down on the enemy deck!</span>`);}
+    G.hull=clamp(G.hull-rint(8,18),0,100);
+    G.deaths=[];
+    if(livingCrew().length===0) return lose("yer boarding party was wiped out to the last");
+    enemyTurn();
+  }
+}
+function fleeCombat(){
+  const c=G.combat;
+  if(chance(c.enemy.flee)){ G.combat=null; resultScreen("⚔ BROKE OFF","Ye put yer helm over and slip away into open water. Live to plunder another day."); }
+  else { const d=rint(10,22); G.hull=clamp(G.hull-d,0,100); pushLog(`<span class="danger">They rake ye as ye turn — ${d}% hull lost!</span>`); if(G.hull<=0) return lose("they holed ye below the waterline as ye ran"); enemyTurn(); }
+}
+function enemyTurn(){
+  const c=G.combat;
+  setTimeout(()=>{
+    const d=rint(Math.round(c.enemy.fire*0.5),c.enemy.fire);
+    G.hull=clamp(G.hull-d,0,100);
+    pushLog(`<span class="danger">${c.enemy.name} fires — ${d}% hull lost.</span>`);
+    fxFlash("hit"); shakeScreen();
+    if(chance(0.18)){ const v=pick(livingCrew()); if(v){v.alive=false;G.deaths.push({name:v.name}); pushLog(`<span class="danger">${v.name} falls to enemy fire!</span>`);} }
+    G.deaths=[];
+    if(G.hull<=0) return lose("yer ship was blasted to splinters in battle");
+    if(livingCrew().length===0) return lose("yer whole crew was slain at the guns");
+    render();
+  }, 500);
+  render();
+}
+function pushLog(s){ G.combat.log.push(s); const el=crt.querySelector("#clog"); if(el) el.innerHTML=G.combat.log.slice(-3).join("<br>"); }
+function winCombat(boarded){
+  const e=G.combat.enemy;
+  const loot=e.loot||0, balls=e.balls||0;
+  G.doubloons+=loot; G.cannonballs+=balls; G.morale=clamp(G.morale+8,0,100);
+  const rations = boarded?rint(4,10):rint(2,6); G.rations+=rations;
+  G.combat=null;
+  resultScreen("⚔ PRIZE TAKEN!",
+    `The ${e.name} strikes her colors! Ye plunder <span class="bright">${loot} doubloons</span>, ${balls} cannonballs, and ${rations} rations from her hold. The crew roars yer name.`);
+}
+
+/* ------------------------------ SHIP'S LOG ------------------------------ */
+function logScreen(){
+  const crewList = G.crew.map(c=>{
+    if(!c.alive) return `<div class="crewline rip">☠ ${c.name} — lost to the sea</div>`;
+    const tag = c.status==="hale" ? '<span class="dim">hale</span>' : `<span class="danger">${prettyIll(c.status)}</span>`;
+    return `<div class="crewline">⚓ ${c.name} — ${tag}</div>`;
+  }).join("");
+  crt.innerHTML = `
+    ${statusBar()}
+    <h2 class="fs28 bright">SHIP'S LOG — THE ${G.ship.toUpperCase()}</h2>
+    <p class="dim fs20">Captain ${G.captain}, ${G.prof.name}. Day ${G.day}. ${G.league} leagues sailed.</p>
+    <hr>
+    <div class="body">${crewList}</div>
+    ${setMenu([{label:"Back on deck", fn:()=>{G.screen="travel";render();}}])}
+  `;
+  bindMenu();
+}
+
+/* ------------------------------ END STATES ------------------------------ */
+function win(){
+  G.outcome="win";
+  const survivors=livingCrew().length;
+  const score = voyageScore(true);
+  const rank = voyageRank(score);
+  recordEnd(score, rank, true);
+  const skull=
+`        _.--\"\"--._
+      .'          '.
+     /   O      O   \\
+    |    \\  ^^  /    |
+    \\     '----'     /
+     '. _______ .'
+       //_____\\\\
+      (( ____ ))
+       '------'`;
+  crt.innerHTML = `
+    <div class="center">
+      <h1 class="big bright">YE MADE IT!</h1>
+      <p class="fs22 dim">The ${G.ship} drops anchor at ${DEST}.</p>
+      <pre class="dim" style="font-size:12px;margin:10px 0">${skull}</pre>
+    </div>
+    <div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    ${seaScene({mini:true,palm:true})}
+    <hr>
+    <div class="body fs21">
+      <div class="row"><span>Days at sea</span><span class="bright">${G.day}</span></div>
+      <div class="row"><span>Crew who lived</span><span class="bright">${survivors} of ${G.crew.length}</span></div>
+      <div class="row"><span>Plunder in the hold</span><span class="bright">${G.doubloons} doubloons</span></div>
+      <div class="row"><span>Hull remaining</span><span class="bright">${Math.round(G.hull)}%</span></div>
+      <hr>
+      <div class="row fs24"><span>FINAL SCORE</span><span class="bright">${score}</span></div>
+      <div class="row fs24"><span>YER LEGEND</span><span class="bright">${rank}</span></div>
+    </div>
+    ${G.crew.some(c=>!c.alive)?`<p class="rip fs20">Lost on the voyage: ${G.crew.filter(c=>!c.alive).map(c=>c.name).join(", ")}. Pour one out.</p>`:''}
+    ${setMenu([
+      {label:"View the Hall of Legends 🏴", fn:()=>{G.screen="ledger";render();}},
+      {label:"Sail again", fn:()=>{newGame();render();}},
+    ])}
+  `;
+  G.screen="end"; bindMenu();
+}
+function lose(reason){
+  G.outcome="lose"; G._loseReason=reason;
+  const score = voyageScore(false);
+  const rank = voyageRank(score);
+  recordEnd(score, rank, false);
+  const grave=
+`     .-------.
+    /  R.I.P. \\
+   /           \\
+  |   ${(G.ship||"").slice(0,9).padEnd(9)} |
+  |             |
+  |    ~~~~~    |
+ _|_____________|_`;
+  crt.innerHTML = `
+    <div class="center">
+      <h1 class="big danger">DAVY JONES' LOCKER</h1>
+      ${seaScene({sink:true})}
+      <pre class="dim" style="font-size:13px;margin:12px 0">${grave}</pre>
+      <p class="fs24 danger">Captain ${G.captain} has died, for ${reason}.</p>
+      <p class="fs20 dim">Ye sailed ${G.league} of ${LEAGUES_TOTAL} leagues over ${G.day} days.</p>
+    </div>
+    <p class="fs20 dim center">Voyage score <span class="bright">${score}</span> — ${rank}</p>
+    <div class="flex"></div>
+    ${setMenu([
+      {label:"View the Hall of Legends 🏴", fn:()=>{G.screen="ledger";render();}},
+      {label:"Try again, ye scurvy dog", fn:()=>{newGame();render();}},
+    ])}
+  `;
+  G.screen="end"; bindMenu();
+}
+
+/* ============================== BOOT ============================== */
+function showFatal(msg){
+  try{
+    document.getElementById("crt").innerHTML =
+      '<h2 class="fs28 danger">Something broke below decks</h2>'+
+      '<p class="fs20 dim" style="white-space:pre-wrap;word-break:break-word">'+
+      String(msg).replace(/</g,"&lt;")+'</p>'+
+      '<p class="hint">Screenshot this and send it over so I can patch it.</p>';
+  }catch(e){}
+}
+window.onerror = function(m,src,line,col){ showFatal(m+"  (line "+line+")"); };
+try{
+  newGame();
+  render();
+}catch(err){
+  showFatal((err&&err.stack)?err.stack:err);
+}
+</script>
+</body>
+</html>
