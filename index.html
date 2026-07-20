@@ -163,6 +163,13 @@
   .t2{right:16%;animation-delay:.5s,1.7s}
   @keyframes tentRise{from{transform:translateY(95px)}to{transform:translateY(0)}}
   @keyframes tentSway{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-5px) rotate(5deg)}}
+  .siren{position:absolute;right:20%;bottom:44px;font-size:12px;color:var(--amber-dim);line-height:1.05;z-index:1;text-shadow:var(--glow)}
+  .notes{position:absolute;right:17%;bottom:84px;z-index:1}
+  .notes span{position:absolute;color:var(--amber-bright);text-shadow:var(--glow);font-size:16px;opacity:0;animation:noteFloat 3s ease-out infinite}
+  .notes span:nth-child(1){right:0;animation-delay:0s}
+  .notes span:nth-child(2){right:20px;animation-delay:1s}
+  .notes span:nth-child(3){right:-16px;animation-delay:2s}
+  @keyframes noteFloat{0%{transform:translateY(12px);opacity:0}20%{opacity:1}100%{transform:translateY(-48px);opacity:0}}
   .rainfx{position:absolute;inset:0;z-index:5;pointer-events:none;background:repeating-linear-gradient(112deg,transparent 0 7px,rgba(200,215,255,.13) 7px 8px);animation:rainShift .45s linear infinite}
   @keyframes rainShift{from{background-position:0 0}to{background-position:-26px 44px}}
   .boltfx{position:absolute;inset:0;z-index:6;pointer-events:none;background:rgba(255,240,200,.9);opacity:0;animation:bolt 3.5s infinite}
@@ -184,7 +191,7 @@
   .sparks i:nth-child(8){left:94%;animation-delay:.9s;animation-duration:2.7s}
   @keyframes sparkFly{0%{transform:translateY(12px) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-115px) scale(1);opacity:0}}
   @media (prefers-reduced-motion:reduce){
-    .shipwrap,.wave,.sun,.farship,.tent,.rainfx,.boltfx,.sparks i,.sailing-dots span,.titleship,.screen.shakefx{animation:none!important}
+    .shipwrap,.wave,.sun,.farship,.tent,.rainfx,.boltfx,.sparks i,.sailing-dots span,.titleship,.screen.shakefx,.notes span{animation:none!important}
   }
 </style>
 </head>
@@ -420,9 +427,15 @@ function replaySameCrew(){
   const keep = { captain:G.captain, ship:G.ship, prof:G.prof,
     crew:G.crew.map(c=>({name:c.name, alive:true, status:"hale"})) };
   newGame();
-  G.captain=keep.captain; G.ship=keep.ship; G.prof=keep.prof;
-  G.doubloons=keep.prof.gold; G.crew=keep.crew;
-  G.screen="outfit"; render();
+  G.captain=keep.captain; G.ship=keep.ship; G.crew=keep.crew; G.prof=keep.prof;
+  crt.innerHTML = `<h2 class="fs28 bright">CHOOSE YER DIFFICULTY</h2>
+    <p class="dim fs22">Same crew, new voyage. How heavy a purse does Captain ${escapeHtml(G.captain)} carry this time?</p>
+    <div class="flex"></div>
+    ${setMenu(PROFESSIONS.map(p=>({
+      label:`${p.name} \u2014 ${p.gold} doubloons <span class="tag">${p.note}</span>`,
+      fn:()=>{ G.prof=p; G.doubloons=p.gold; G.screen="outfit"; render(); }
+    })))}`;
+  bindMenu();
 }
 function endScreen(){ if(G.outcome==="win") win(); else lose(G._loseReason||"reasons lost to the sea"); }
 
@@ -642,6 +655,9 @@ function seaScene(o){
   |</pre>`:''}
     ${(o.otherShip||o.ghost)?`<pre class="farship${o.ghost?' ghostship':''}">${SHIP_FAR}</pre>`:''}
     ${o.tentacles?`<pre class="tent t1">${TENTACLE}</pre><pre class="tent t2">${TENTACLE}</pre>`:''}
+    ${o.sirens?`<pre class="siren">  \\o
+   |\\
+__/~\\__</pre><div class="notes"><span>\u266a</span><span>\u266b</span><span>\u266a</span></div>`:''}
     <div class="shipwrap${o.sink?' sinking':''}"><pre class="shipart" style="font-size:${o.tall?12:9}px">${SHIP_SMALL}</pre></div>
     <div class="wave w1"></div>
     <div class="wave w2"></div>
@@ -654,6 +670,7 @@ function eventFx(title){
   if(title.indexOf("\ud83d\udc7b")>=0) return {ghost:true};
   if(title.indexOf("\ud83c\udff4")>=0||title.indexOf("\u2693")>=0) return {otherShip:true};
   if(title.indexOf("\ud83c\udfdd")>=0) return {palm:true};
+  if(title.indexOf("🧜")>=0) return {sirens:true};
   return {};
 }
 function fxFlash(kind){
@@ -682,9 +699,9 @@ function showSailing(dist, days){
 
 /* ------------------------------ TRAVEL ------------------------------ */
 const PACE = {
-  grueling:{leagues:[80,110], food:1.5, wear:6,  label:"Grueling — run 'em ragged"},
-  steady:  {leagues:[55,80],  food:1.0, wear:3,  label:"Steady — a fair clip"},
-  leisurely:{leagues:[30,55], food:0.7, wear:1.5,  label:"Leisurely — easy sailing"},
+  grueling:{leagues:[80,110], food:1.5, wear:7,  label:"Grueling — run 'em ragged"},
+  steady:  {leagues:[55,80],  food:1.0, wear:3.5,  label:"Steady — a fair clip"},
+  leisurely:{leagues:[30,55], food:0.7, wear:2,  label:"Leisurely — easy sailing"},
 };
 const FOOD = { filling:{mult:1.4,mor:+2}, meager:{mult:1.0,mor:0}, bare:{mult:0.6,mor:-2} };
 const GROG = { generous:{rum:3,mor:+5}, meager:{rum:1.5,mor:+1}, dry:{rum:0,mor:-7} };
@@ -704,7 +721,8 @@ function travelScreen(){
       {label:"Set the pace", fn:()=>settingMenu("pace")},
       {label:"Set the rations", fn:()=>settingMenu("food")},
       {label:"Set the fizz", fn:()=>settingMenu("grog")},
-      {label:"Careen for repairs (2 days, 6 rations)", fn:careen},
+      {label:"Careen for repairs (2 days, 8 rations)", fn:careen},
+      {label:"Cast the lines — fish for rations (1 day)", fn:fishingMinigame},
       {label:"Muster the crew (ship's log)", fn:()=>{G.screen="log";render();}},
     ])}
   `;
@@ -712,10 +730,10 @@ function travelScreen(){
 }
 function cap1(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 function careen(){
-  if(G.rations<6){ resultScreen("🔨 NO STORES","Careening takes provisions ye don't have \u2014 six rations to feed the work crew."); return; }
+  if(G.rations<8){ resultScreen("🔨 NO STORES","Careening takes provisions ye don't have \u2014 eight rations to feed the work crew."); return; }
   if(G.hull>=100){ resultScreen("🔨 SHIPSHAPE","The hull's already tight as a drum. No need to beach her."); return; }
-  G.rations-=6; G.day+=2;
-  const fix=rint(12,22); G.hull=clamp(G.hull+fix,0,100);
+  G.rations-=8; G.day+=2;
+  const fix=rint(10,18); G.hull=clamp(G.hull+fix,0,100);
   resultScreen("🔨 CAREENED & PATCHED",`Ye beach her on a sandbar, scrape the weed, and patch ${fix}% of the hull over two days' hard graft.`);
 }
 function settingMenu(which){
@@ -815,6 +833,105 @@ function resolveSick(notes){
 }
 function prettyIll(s){return {scurvy:"scurvy",fever:"the fever",flux:"the bloody flux",drink:"too much fizz"}[s]||s;}
 
+/* ------------------------------ MINIGAMES ------------------------------ */
+function helmMinigame(baseDmg){
+  INPUT_MODE=null;
+  let pos=50, vel=0, drift=(Math.random()<0.5?-1:1)*0.35, outside=0, last=Date.now();
+  const DUR=6000, t0=Date.now();
+  crt.innerHTML = `
+    ${statusBar()}
+    <h2 class="fs28 bright">⛈ HANDS ON THE WHEEL</h2>
+    <p class="fs20 dim">Hold her in the channel! Tap PORT and STARBOARD to fight the sea. (keys: 1 / 2 or arrows)</p>
+    <div class="aim" id="helmbar">
+      <div class="zone" style="left:32%;width:36%"></div>
+      <div class="marker" id="helmmk"></div>
+    </div>
+    <p class="fs22 center dim" id="helmclock"></p>
+    ${setMenu([
+      {label:"⬅ PORT", fn:()=>{vel-=2.4;}},
+      {label:"STARBOARD ➡", fn:()=>{vel+=2.4;}},
+    ])}
+  `;
+  bindMenu();
+  const bar=crt.querySelector("#helmbar"), mk=crt.querySelector("#helmmk"), clock=crt.querySelector("#helmclock");
+  const key=(e)=>{ if(e.key==="ArrowLeft"){vel-=2.4;e.preventDefault();} if(e.key==="ArrowRight"){vel+=2.4;e.preventDefault();} };
+  document.addEventListener("keydown",key);
+  let raf;
+  function loop(){
+    const now=Date.now(), dt=Math.min(50,now-last); last=now;
+    if(Math.random()<0.02) drift=-drift;
+    vel += drift*dt/160 + (Math.random()-0.5)*0.35;
+    vel *= 0.985;
+    pos = clamp(pos + vel*dt/40, 0, 100);
+    if(pos<=0||pos>=100) vel=0;
+    const out = pos<32||pos>68;
+    if(out) outside += dt;
+    if(mk){ const w=(bar&&bar.clientWidth)||300; mk.style.left=Math.round(pos/100*(w-5))+"px"; mk.style.background=out?"var(--danger)":"var(--amber-bright)"; }
+    const remain=Math.max(0,DUR-(now-t0));
+    if(clock) clock.textContent="Hold fast: "+(remain/1000).toFixed(1)+"s";
+    if(now-t0>=DUR){ finish(); return; }
+    raf=requestAnimationFrame(loop);
+  }
+  function finish(){
+    document.removeEventListener("keydown",key);
+    if(raf) cancelAnimationFrame(raf);
+    const frac = outside/DUR;
+    const dmg = Math.max(2, Math.round(baseDmg*(0.25+frac*1.1)));
+    G.hull=clamp(G.hull-dmg,0,100);
+    const grade = frac<0.15?"Masterful helmsmanship!":frac<0.35?"A rough ride, but she holds.":frac<0.6?"The sea had her way more than not.":"Ye near broached her, captain.";
+    let extra="";
+    if(frac>0.55 && chance(0.35)){ const c=pick(livingCrew()); if(c){ c.alive=false; G.deaths.push({name:c.name}); extra=` A wave sweeps <span class="danger">${c.name}</span> from the deck.`; } }
+    resultScreen("⛈ THROUGH THE TEMPEST", `${grade} The storm claws ${dmg}% from the hull.`+extra);
+  }
+  raf=requestAnimationFrame(loop);
+}
+function fishingMinigame(){
+  INPUT_MODE=null;
+  G.day+=1;
+  const casts=3; let cast=0, caught=0, gained=0, active=false, t0=0, period=900, zoneL=40;
+  let raf=null;
+  function fishPos(){ const ph=((Date.now()-t0)/period)%2; return (ph<1?ph:2-ph)*100; }
+  function loop(){
+    const bar=crt.querySelector("#fishbar"), mk=crt.querySelector("#fishmk");
+    if(!mk || !mk.isConnected || !active) return;
+    const w=(bar&&bar.clientWidth)||300;
+    mk.style.left=Math.round(fishPos()/100*(w-5))+"px";
+    raf=requestAnimationFrame(loop);
+  }
+  function draw(note){
+    crt.innerHTML=`
+      ${statusBar()}
+      <h2 class="fs28 bright">\ud83c\udfa3 CAST THE LINES</h2>
+      <p class="fs20 dim">Strike when the fish crosses the hook zone! Cast ${Math.min(cast+1,casts)} of ${casts} · caught ${caught}</p>
+      <div class="aim" id="fishbar">
+        <div class="zone crit" style="left:${zoneL}%;width:16%"></div>
+        <div class="marker" id="fishmk"></div>
+      </div>
+      <p class="fs22 center" id="fishnote">${note||"Steady… wait for it…"}</p>
+      ${setMenu([{label:"\ud83c\udfa3 STRIKE!", fn:strike}])}
+    `;
+    bindMenu();
+    loop();
+  }
+  function nextCast(note){
+    if(cast>=casts){ finish(); return; }
+    zoneL=rint(15,70); period=rint(650,1050); t0=Date.now(); active=true;
+    draw(note);
+  }
+  function strike(){
+    if(!active) return;
+    active=false; if(raf) cancelAnimationFrame(raf);
+    const p=fishPos();
+    cast++;
+    if(p>=zoneL && p<=zoneL+16){ const r=rint(3,5); caught++; gained+=r; G.rations+=r; setTimeout(()=>nextCast(`<span class="bright">Thump! A fat one — +${r} rations.</span>`),350); }
+    else { setTimeout(()=>nextCast('<span class="danger">It slips the hook!</span>'),350); }
+  }
+  function finish(){
+    G.morale=clamp(G.morale+(caught?3:-2),0,100);
+    resultScreen("\ud83c\udfa3 LINES IN", caught? `A day at the lines brings in ${caught} catch${caught>1?"es":""} — <span class="bright">+${gained} rations</span>. The crew eats well tonight.` : "A day wasted and naught but weed on the hooks. The crew grumbles.");
+  }
+  nextCast();
+}
 /* ------------------------------ EVENTS ------------------------------ */
 function rollEvent(){
   if(!chance(0.82)) return null;
@@ -843,6 +960,7 @@ const EVENTS = [
           G.hull=clamp(G.hull-Math.round(dmg*0.5),0,100);
           resultScreen("⛈ THE STORM PASSES", `Ye heave ${Math.round(lost)} rations to the waves. The lighter ship rides easier — only ${Math.round(dmg*0.5)}% hull lost.`);
         }},
+        {label:"Take the helm yerself (steady hands!)", fn:()=>helmMinigame(dmg)},
       ]};
   }},
   // MERCHANT
@@ -957,7 +1075,7 @@ const EVENTS = [
       ]};
   }},
   // FRIENDLY PORT
-  { w:3, make(){
+  { w:2, make(){
     const port = pick(["Port Royal","Nassau","Nombre de Dios","Petit-Goâve","Isla Perla"]);
     return { title:"🏝 LAND HO — "+port.toUpperCase(), text:`A friendly harbor opens up. Ye could put in to trade, repair, and water the ship.`,
       choices:[
@@ -980,6 +1098,34 @@ const EVENTS = [
           else { const c=pick(livingCrew()); if(c)c.status="fever"; resultScreen("👻 PLAGUE SHIP","She was a plague ship. Whatever killed her crew now stalks yer own.",()=>{}); }
         }},
         {label:"Leave the dead to the dead", fn:()=>resultScreen("👻 GIVE HER A WIDE BERTH","Ye steer well clear. Wise, perhaps.")},
+      ]};
+  }},
+  // SIRENS
+  { w:2, make(){
+    return { title:"🧜 A SONG ON THE WIND", text:"Merfolk lounge upon a jagged rock, combing pearl-bright hair and singing sweeter than any shanty. The crew crowds the rail, moon-eyed and half in love already.",
+      choices:[
+        {label:"Share a round of Fathom Fizz (3 Fizz)", fn:()=>{
+          if(G.rum<3){ G.morale=clamp(G.morale-4,0,100); resultScreen("🧜 EMPTY-HANDED","Not a drop to offer. The merfolk pout, flick their tails, and vanish beneath the swell. The crew sulks for days."); return; }
+          G.rum-=3;
+          const roll=Math.random();
+          if(roll<0.45){ const lg=rint(30,60); G.league+=lg; G.morale=clamp(G.morale+10,0,100); resultScreen("🧜 A SECRET CURRENT",`Charmed by yer generosity, they sing ye the way through hidden currents \u2014 ${lg} leagues gained, and the crew hums that tune for a week.`); }
+          else if(roll<0.8){ const g=rint(80,200); G.doubloons+=g; G.morale=clamp(G.morale+6,0,100); resultScreen("🧜 GIFTS FROM THE DEEP",`They press ${g} doubloons' worth of sunken pearls into yer hands and slip away laughing.`); }
+          else {
+            const eligible=livingCrew();
+            if(eligible.length>1){ const c=pick(eligible); c.alive=false; G.deaths.push({name:c.name}); G.morale=clamp(G.morale-6,0,100); resultScreen("🧜 SMITTEN",`The revel goes grand \u2014 too grand. Come morning, <span class="danger">${c.name}</span> has vowed to live among the merfolk and slips beneath the waves, waving goodbye.`); }
+            else { G.morale=clamp(G.morale+8,0,100); resultScreen("🧜 A FINE EVENING","Fizz and song till the stars fade. The merfolk dive at dawn, and the sea feels friendlier for it."); }
+          }
+        }},
+        {label:"Fire a warning shot! (1 cannonball)", fn:()=>{
+          if(G.cannonballs<1){ G.morale=clamp(G.morale-5,0,100); resultScreen("🧜 NO SHOT","The locker's empty. The merfolk laugh at yer bluster and sing louder just to spite ye."); return; }
+          G.cannonballs--; fxFlash("fire"); shakeScreen();
+          if(chance(0.5)){ const d=rint(8,18); G.hull=clamp(G.hull-d,0,100); G.morale=clamp(G.morale-5,0,100); resultScreen("🧜 CURSED WATERS",`They dive laughing \u2014 and the sea turns spiteful. Hidden rocks where no rocks should be scrape ${d}% off the hull. The crew mutters it's bad luck to fire on merfolk.`); }
+          else { G.morale=clamp(G.morale-3,0,100); resultScreen("🧜 SPELL BROKEN","The shot cracks the trance. The merfolk vanish in a flash of tails, and the crew shakes their heads clear \u2014 though some won't forgive ye."); }
+        }},
+        {label:"Wax in yer ears and sail past", fn:()=>{
+          G.morale=clamp(G.morale-2,0,100);
+          resultScreen("🧜 THE WISE COURSE","Ye stop every ear with wax and hold course. Safe \u2014 though the crew grumbles for days about the finest song they never heard.");
+        }},
       ]};
   }},
 ];
@@ -1102,19 +1248,56 @@ function fireNow(zoneL,zoneW,critL){
 }
 function boardThem(){
   const c=G.combat;
-  pushLog("Grappling hooks fly — steel meets steel across the rail!");
-  shakeScreen();
-  const strength = livingCrew().length + (G.morale>50?1:0);
-  if(chance(clamp(0.35+strength*0.08,0,0.85))){
-    c.enemy.hull=0; return winCombat(true);
-  } else {
-    const victim=pick(livingCrew());
-    if(victim && chance(0.6)){ victim.alive=false; G.deaths.push({name:victim.name}); pushLog(`<span class="danger">${victim.name} is cut down on the enemy deck!</span>`);}
-    G.hull=clamp(G.hull-rint(8,18),0,100);
+  INPUT_MODE=null;
+  let round=0, hits=0, windowOpen=false, done=false;
+  const timers=[];
+  const spaceKey=(e)=>{ if(e.code==="Space"){ e.preventDefault(); swing(); } };
+  document.addEventListener("keydown",spaceKey);
+  function ui(center){
+    crt.innerHTML=`
+      ${statusBar()}
+      <h2 class="fs28 bright">⚔ BOARDING ACTION</h2>
+      <p class="fs20 dim">Wait for the flash — then PARRY! Three exchanges decide it. (tap, or key 1 / space)</p>
+      <p class="center" style="font-size:42px;min-height:64px" id="duelcue">${center||""}</p>
+      <p class="center dim fs20">Exchanges won: ${hits} of ${round}</p>
+      ${setMenu([{label:"⚔ PARRY!", fn:swing}])}
+    `;
+    bindMenu();
+  }
+  function schedule(){
+    if(round>=3){ finish(); return; }
+    ui('<span class="dim">en garde…</span>');
+    timers.push(setTimeout(()=>{
+      windowOpen=true;
+      const cue=crt.querySelector("#duelcue"); if(cue) cue.innerHTML='<span class="danger">⚔ PARRY NOW!</span>';
+      timers.push(setTimeout(()=>{ if(windowOpen){ windowOpen=false; round++; ui('<span class="danger">Too slow — steel bites!</span>'); timers.push(setTimeout(schedule,550)); } }, 620));
+    }, rint(700,1600)));
+  }
+  function swing(){
+    if(done) return;
+    if(windowOpen){ windowOpen=false; round++; hits++; ui('<span class="bright">CLANG! Ye turn the blade!</span>'); timers.push(setTimeout(schedule,550)); }
+    else if(round<3){ round++; ui('<span class="danger">Ye swing at shadows — steel bites!</span>'); timers.push(setTimeout(schedule,550)); }
+  }
+  function finish(){
+    if(done) return;
+    done=true; timers.forEach(clearTimeout);
+    document.removeEventListener("keydown",spaceKey);
+    shakeScreen();
+    if(hits>=2){ c.enemy.hull=0; winCombat(true); return; }
+    G.hull=clamp(G.hull-rint(6,14),0,100);
+    let msg;
+    if(hits===1){ msg="A bloody stalemate at the rail — both sides fall back to the guns."; }
+    else {
+      const v=pick(livingCrew());
+      if(v&&chance(0.7)){ v.alive=false; G.deaths.push({name:v.name}); msg=`<span class="danger">${v.name} falls</span> on the enemy deck as yer boarders are thrown back.`; }
+      else msg="Yer boarders are hurled back over the rail, bruised and cursing.";
+    }
     G.deaths=[];
-    if(livingCrew().length===0) return lose("yer boarding party was wiped out to the last");
+    if(livingCrew().length===0) return lose("yer boarding party was cut down to the last");
+    pushLog(msg);
     enemyTurn();
   }
+  schedule();
 }
 function fleeCombat(){
   const c=G.combat;
