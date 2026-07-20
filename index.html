@@ -251,9 +251,9 @@ const CREW_POOL = ["Bootstrap Bill","One-Eyed Jack","Salty Meg","Barnacle Pete",
   "Cutlass Kate","Riggin' Dan","Old Hobb","Nib the Younger","Scupper Joe"];
 
 const PROFESSIONS = [
-  {name:"Wealthy Privateer",  gold:1600, note:"a full purse, but a soft one",  rank:1},
-  {name:"Grizzled Buccaneer", gold:900,  note:"scarred, salted, and sensible", rank:2},
-  {name:"Penniless Deckhand", gold:450,  note:"nothin' but grit and a grudge", rank:3},
+  {name:"Wealthy Privateer",  gold:1600, note:"a full purse, but a soft one",  rank:1, mult:1},
+  {name:"Grizzled Buccaneer", gold:900,  note:"scarred, salted, and sensible", rank:2, mult:1.5},
+  {name:"Penniless Deckhand", gold:450,  note:"nothin' but grit and a grudge", rank:3, mult:2},
 ];
 
 const DEST = "the Isle of Bones";
@@ -401,6 +401,7 @@ function voyageScore(won){
   const survivors=livingCrew().length;
   let s = G.doubloons + survivors*300 + Math.round(G.hull*4) + Math.round(G.morale*2) + Math.round(G.league/4) - G.day*3;
   if(won) s += 1500;
+  s *= (G.prof&&G.prof.mult)||1;
   return Math.max(0, Math.round(s));
 }
 function voyageRank(s){
@@ -409,7 +410,7 @@ function voyageRank(s){
 function recordEnd(score, rank, won){
   if(G._recorded) return;            // guard against double-recording on re-render
   G._recorded = true;
-  G._entry = { cap:G.captain, ship:G.ship, score, rank,
+  G._entry = { cap:G.captain, ship:G.ship, score, rank, mult:(G.prof&&G.prof.mult)||1,
     leagues:Math.min(G.league,LEAGUES_TOTAL), days:G.day,
     survivors:livingCrew().length, crew:G.crew.length, won, ts:Date.now() };
   recordVoyage(G._entry);            // fire-and-forget persist; display merges G._entry directly
@@ -434,7 +435,7 @@ function ledgerScreen(){
                            : `<span class="rip">☠ lost at ${e.leagues} lg</span>`;
         return `<div class="row" style="align-items:flex-start;margin:5px 0">
           <span class="${me?'':'dim'}">${String(i+1).padStart(2,'0')}. <span class="${me?'bright':''}">${escapeHtml(e.cap)}</span> <span class="faint">— the ${escapeHtml(e.ship)}</span><br>
-            <span class="tag">${e.rank}</span> ${fate}${me?' <span class="faint">(this run)</span>':''}</span>
+            <span class="tag">${e.rank}</span>${e.mult&&e.mult!==1?` <span class="tag">\u00d7${e.mult}</span>`:``} ${fate}${me?' <span class="faint">(this run)</span>':''}</span>
           <span class="bright">${e.score}</span></div>`;
       }).join('<hr style="margin:6px 0">');
     }
@@ -464,7 +465,7 @@ function replaySameCrew(){
     <p class="dim fs22">Same crew, new voyage. How heavy a purse does Captain ${escapeHtml(G.captain)} carry this time?</p>
     <div class="flex"></div>
     ${setMenu(PROFESSIONS.map(p=>({
-      label:`${p.name} \u2014 ${p.gold} doubloons <span class="tag">${p.note}</span>`,
+      label:`${p.name} \u2014 ${p.gold} doubloons <span class="tag">${p.note}</span> <span class="tag">\u00d7${p.mult} score</span>`,
       fn:()=>{ G.prof=p; G.doubloons=p.gold; G.screen="outfit"; render(); }
     })))}`;
   bindMenu();
@@ -568,7 +569,7 @@ function professionScreen(){
     <p class="dim fs22">Yer past decides the coin ye start with — and how hard the sea will judge ye.</p>
     <div class="flex"></div>
     ${setMenu(PROFESSIONS.map(p=>({
-      label:`${p.name} — ${p.gold} doubloons <span class="tag">${p.note}</span>`,
+      label:`${p.name} — ${p.gold} doubloons <span class="tag">${p.note}</span> <span class="tag">\u00d7${p.mult} score</span>`,
       fn:()=>{ G.prof=p; G.doubloons=p.gold; G.screen="crew"; render(); }
     })))}
   `;
@@ -1457,6 +1458,7 @@ function win(){
       <div class="row"><span>Plunder in the hold</span><span class="bright">${G.doubloons} doubloons</span></div>
       <div class="row"><span>Hull remaining</span><span class="bright">${Math.round(G.hull)}%</span></div>
       <hr>
+      <div class="row"><span>Difficulty — ${G.prof.name}</span><span class="bright">\u00d7${(G.prof&&G.prof.mult)||1}</span></div>
       <div class="row fs24"><span>FINAL SCORE</span><span class="bright">${score}</span></div>
       <div class="row fs24"><span>YER LEGEND</span><span class="bright">${rank}</span></div>
     </div>
@@ -1491,7 +1493,7 @@ function lose(reason){
       <p class="fs24 danger">Captain ${G.captain} has died, for ${reason}.</p>
       <p class="fs20 dim">Ye sailed ${G.league} of ${LEAGUES_TOTAL} leagues over ${G.day} days.</p>
     </div>
-    <p class="fs20 dim center">Voyage score <span class="bright">${score}</span> — ${rank}</p>
+    <p class="fs20 dim center">Voyage score <span class="bright">${score}</span> <span class="tag">\u00d7${(G.prof&&G.prof.mult)||1}</span> — ${rank}</p>
     <div class="flex"></div>
     ${setMenu([
       {label:"Share yer legend 📜", fn:()=>shareLegend()},
