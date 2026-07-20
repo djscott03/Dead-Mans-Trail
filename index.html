@@ -52,7 +52,6 @@
     display:flex;flex-direction:column;
   }
   @keyframes flicker{0%,100%{opacity:.9}48%{opacity:.86}50%{opacity:.98}52%{opacity:.87}}
-  @media (prefers-reduced-motion: reduce){ .marker{animation:none!important} }
 
   .crt{flex:1;display:flex;flex-direction:column;text-shadow:var(--glow)}
   pre{margin:0;font-family:'VT323',ui-monospace,Menlo,'Courier New',monospace;line-height:1.02;text-shadow:var(--glow)}
@@ -108,8 +107,7 @@
   .aim{position:relative;height:34px;border:2px solid var(--amber-dim);border-radius:5px;margin:14px 0;overflow:hidden;background:#0a0603}
   .zone{position:absolute;top:0;bottom:0;background:rgba(255,176,0,.18)}
   .zone.crit{background:rgba(255,90,31,.35)}
-  .marker{position:absolute;top:0;bottom:0;width:5px;background:var(--amber-bright);box-shadow:0 0 10px var(--amber-bright);left:0;animation:sweep .9s linear infinite alternate}
-  @keyframes sweep{from{left:0}to{left:calc(100% - 5px)}}
+  .marker{position:absolute;top:0;bottom:0;width:5px;background:var(--amber-bright);box-shadow:0 0 10px var(--amber-bright);left:0}
 
   .crewline{font-size:21px}
   .rip{color:var(--amber-faint)}
@@ -345,6 +343,21 @@ async function recordVoyage(entry){
 }
 async function clearScores(){ SCORES=[]; await persistScores([]); }
 
+function shareLegend(e){
+  e = e || G._entry;
+  if(!e) return;
+  const fate = e.won ? "Reached the Isle of Bones in "+e.days+" days!" : "Lost at sea after "+e.leagues+" leagues.";
+  const txt = "\ud83c\udff4 DEAD MAN'S TRAIL\nCaptain "+e.cap+" of the "+e.ship+"\n"+fate+"\nScore: "+e.score+" \u2014 "+e.rank+"\nThink ye can best me? Sail: https://djscott03.github.io/Dead-Mans-Trail/";
+  if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){
+      document.querySelectorAll(".menu button").forEach(function(b){
+        if(b.textContent.indexOf("Share")>=0) b.innerHTML='<span class="k">\u2713</span>Copied \u2014 paste it to yer crew!';
+      });
+    }).catch(function(){});
+  }
+}
+
 function voyageScore(won){
   const survivors=livingCrew().length;
   let s = G.doubloons + survivors*300 + Math.round(G.hull*4) + Math.round(G.morale*2) + Math.round(G.league/4) - G.day*3;
@@ -387,7 +400,7 @@ function ledgerScreen(){
       }).join('<hr style="margin:6px 0">');
     }
     const opts = [{label:"Back to the docks", fn:()=>{G.screen="title";render();}}];
-    if(top.length) opts.push({label:"Scuttle the ledger (clear all)", fn:confirmClear});
+    if(top.length){ opts.splice(1,0,{label:"Share yer best run 📜", fn:function(){ shareLegend(top[0]); }}); opts.push({label:"Scuttle the ledger (clear all)", fn:confirmClear}); }
     crt.innerHTML = `<h2 class="fs28 bright">🏴 HALL OF LEGENDS</h2>
       <p class="dim fs20">The finest runs from Tortuga to ${DEST}.</p><hr>
       <div class="body">${rows}</div>${setMenu(opts)}`;
@@ -402,6 +415,14 @@ function confirmClear(){
       {label:"Belay that — keep it", fn:()=>{ G.screen="ledger"; render(); }},
     ])}`;
   bindMenu();
+}
+function replaySameCrew(){
+  const keep = { captain:G.captain, ship:G.ship, prof:G.prof,
+    crew:G.crew.map(c=>({name:c.name, alive:true, status:"hale"})) };
+  newGame();
+  G.captain=keep.captain; G.ship=keep.ship; G.prof=keep.prof;
+  G.doubloons=keep.prof.gold; G.crew=keep.crew;
+  G.screen="outfit"; render();
 }
 function endScreen(){ if(G.outcome==="win") win(); else lose(G._loseReason||"reasons lost to the sea"); }
 
@@ -661,9 +682,9 @@ function showSailing(dist, days){
 
 /* ------------------------------ TRAVEL ------------------------------ */
 const PACE = {
-  grueling:{leagues:[80,110], food:1.5, wear:8,  label:"Grueling — run 'em ragged"},
-  steady:  {leagues:[55,80],  food:1.0, wear:4,  label:"Steady — a fair clip"},
-  leisurely:{leagues:[30,55], food:0.7, wear:2,  label:"Leisurely — easy sailing"},
+  grueling:{leagues:[80,110], food:1.5, wear:6,  label:"Grueling — run 'em ragged"},
+  steady:  {leagues:[55,80],  food:1.0, wear:3,  label:"Steady — a fair clip"},
+  leisurely:{leagues:[30,55], food:0.7, wear:1.5,  label:"Leisurely — easy sailing"},
 };
 const FOOD = { filling:{mult:1.4,mor:+2}, meager:{mult:1.0,mor:0}, bare:{mult:0.6,mor:-2} };
 const GROG = { generous:{rum:3,mor:+5}, meager:{rum:1.5,mor:+1}, dry:{rum:0,mor:-7} };
@@ -683,12 +704,20 @@ function travelScreen(){
       {label:"Set the pace", fn:()=>settingMenu("pace")},
       {label:"Set the rations", fn:()=>settingMenu("food")},
       {label:"Set the fizz", fn:()=>settingMenu("grog")},
+      {label:"Careen for repairs (2 days, 6 rations)", fn:careen},
       {label:"Muster the crew (ship's log)", fn:()=>{G.screen="log";render();}},
     ])}
   `;
   bindMenu();
 }
 function cap1(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function careen(){
+  if(G.rations<6){ resultScreen("🔨 NO STORES","Careening takes provisions ye don't have \u2014 six rations to feed the work crew."); return; }
+  if(G.hull>=100){ resultScreen("🔨 SHIPSHAPE","The hull's already tight as a drum. No need to beach her."); return; }
+  G.rations-=6; G.day+=2;
+  const fix=rint(12,22); G.hull=clamp(G.hull+fix,0,100);
+  resultScreen("🔨 CAREENED & PATCHED",`Ye beach her on a sandbar, scrape the weed, and patch ${fix}% of the hull over two days' hard graft.`);
+}
 function settingMenu(which){
   let opts;
   if(which==="pace") opts = Object.keys(PACE).map(k=>({label:PACE[k].label, fn:()=>{G.pace=k;G.screen="travel";render();}}));
@@ -928,7 +957,7 @@ const EVENTS = [
       ]};
   }},
   // FRIENDLY PORT
-  { w:2, make(){
+  { w:3, make(){
     const port = pick(["Port Royal","Nassau","Nombre de Dios","Petit-Goâve","Isla Perla"]);
     return { title:"🏝 LAND HO — "+port.toUpperCase(), text:`A friendly harbor opens up. Ye could put in to trade, repair, and water the ship.`,
       choices:[
@@ -1037,19 +1066,29 @@ function startAim(){
     ${setMenu([{label:"🔥 FIRE!", fn:()=>fireNow(zoneL,zoneW,critL)}])}
   `;
   bindMenu();
+  // JS-driven sweep: immune to Reduce Motion and frozen CSS animations
+  c._aimT0 = Date.now();
+  const marker=crt.querySelector("#marker"), bar=crt.querySelector("#aimbar");
+  function sweepLoop(){
+    if(!c.aim || !marker || !marker.isConnected) return;
+    const p = aimPos(c._aimT0);
+    const w = (bar && bar.clientWidth) || 300;
+    marker.style.left = Math.max(0, Math.round(p/100*(w-5)))+"px";
+    c._rafId = requestAnimationFrame(sweepLoop);
+  }
+  c._rafId = requestAnimationFrame(sweepLoop);
   const keyFire=(e)=>{ if(e.code==="Space"){ e.preventDefault(); fireNow(zoneL,zoneW,critL);} };
   document.addEventListener("keydown",keyFire,{once:true});
   G.combat._keyFire=keyFire;
 }
+function aimPos(t0){
+  const ph = ((Date.now()-t0)/900) % 2;
+  return (ph<1 ? ph : 2-ph)*100;
+}
 function fireNow(zoneL,zoneW,critL){
   const c=G.combat; if(!c.aim) return; c.aim=false;
-  const marker=crt.querySelector("#marker");
-  const bar=crt.querySelector("#aimbar");
-  let pos=50;
-  if(marker&&bar){
-    const m=marker.getBoundingClientRect(), b=bar.getBoundingClientRect();
-    pos = ((m.left - b.left)/b.width)*100;
-  }
+  if(c._rafId) cancelAnimationFrame(c._rafId);
+  const pos = aimPos(c._aimT0 || Date.now());
   G.cannonballs--;
   fxFlash("fire"); shakeScreen();
   let dmg, note;
@@ -1163,8 +1202,10 @@ function win(){
     </div>
     ${G.crew.some(c=>!c.alive)?`<p class="rip fs20">Lost on the voyage: ${G.crew.filter(c=>!c.alive).map(c=>c.name).join(", ")}. Pour one out.</p>`:''}
     ${setMenu([
+      {label:"Share yer legend 📜", fn:()=>shareLegend()},
       {label:"View the Hall of Legends 🏴", fn:()=>{G.screen="ledger";render();}},
-      {label:"Sail again", fn:()=>{newGame();render();}},
+      {label:"Sail again — same captain & crew ⚓", fn:replaySameCrew},
+      {label:"Sail again — fresh start", fn:()=>{newGame();render();}},
     ])}
   `;
   G.screen="end"; bindMenu();
@@ -1193,8 +1234,10 @@ function lose(reason){
     <p class="fs20 dim center">Voyage score <span class="bright">${score}</span> — ${rank}</p>
     <div class="flex"></div>
     ${setMenu([
+      {label:"Share yer legend 📜", fn:()=>shareLegend()},
       {label:"View the Hall of Legends 🏴", fn:()=>{G.screen="ledger";render();}},
-      {label:"Try again, ye scurvy dog", fn:()=>{newGame();render();}},
+      {label:"Try again — same captain & crew ⚓", fn:replaySameCrew},
+      {label:"Try again — fresh start, ye scurvy dog", fn:()=>{newGame();render();}},
     ])}
   `;
   G.screen="end"; bindMenu();
