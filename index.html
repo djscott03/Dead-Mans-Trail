@@ -146,27 +146,27 @@
   .sea{position:relative;overflow:hidden;border:1px solid var(--amber-faint);border-radius:8px;background:linear-gradient(180deg,#0e0a05 0%,#161009 60%,#0b0804 100%);margin:6px 0 10px}
   .sun{position:absolute;right:24px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--amber);box-shadow:0 0 22px 6px rgba(255,176,0,.45);animation:sunPulse 3.2s ease-in-out infinite}
   @keyframes sunPulse{50%{box-shadow:0 0 32px 10px rgba(255,176,0,.6)}}
-  .shipwrap{position:absolute;left:0;right:0;bottom:32px;display:flex;justify-content:center;animation:shipBob 2.8s ease-in-out infinite;z-index:2}
+  .shipwrap{position:absolute;left:0;right:0;bottom:6px;display:flex;flex-direction:column;align-items:center;animation:shipBob 2.8s ease-in-out infinite;z-index:2}
   .shipart{color:var(--amber);text-shadow:var(--glow);line-height:1}
   @keyframes shipBob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-8px) rotate(1.5deg)}}
   .shipwrap.sinking{animation:sinkShip 4.5s ease-in forwards}
   @keyframes sinkShip{0%{transform:translateY(0) rotate(-2deg)}100%{transform:translateY(120px) rotate(18deg);opacity:.08}}
-  .wave{position:absolute;left:0;width:200%;height:34px;z-index:3;background-repeat:repeat-x;background-size:120px 34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='34'%3E%3Cpath d='M0 18 Q15 6 30 18 T60 18 T90 18 T120 18 V34 H0 Z' fill='%23241705'/%3E%3Cpath d='M0 18 Q15 6 30 18 T60 18 T90 18 T120 18' stroke='%23b5730a' stroke-width='2' fill='none'/%3E%3C/svg%3E")}
+  .wave{position:absolute;left:0;width:200%;height:34px;z-index:3;background-repeat:repeat-x;background-size:140px 34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='34'%3E%3Cpath d='M0 19 Q9 9 20 16 Q29 21 40 13 Q51 6 62 17 Q71 23 82 14 Q93 7 104 18 Q113 22 124 14 Q132 9 140 18 V34 H0 Z' fill='%23241705'/%3E%3Cpath d='M0 19 Q9 9 20 16 Q29 21 40 13 Q51 6 62 17 Q71 23 82 14 Q93 7 104 18 Q113 22 124 14 Q132 9 140 18' stroke='%23b5730a' stroke-width='2' fill='none'/%3E%3Ccircle cx='20' cy='14' r='1.7' fill='%23ffd98a'/%3E%3Ccircle cx='62' cy='15' r='1.7' fill='%23ffd98a'/%3E%3Ccircle cx='104' cy='16' r='1.7' fill='%23ffd98a'/%3E%3C/svg%3E")}
   .w1{bottom:13px;opacity:.5;animation:waveMove 6s linear infinite}
   .w2{bottom:0;animation:waveMove 3.8s linear infinite reverse}
-  @keyframes waveMove{from{transform:translateX(0)}to{transform:translateX(-120px)}}
-  .farwrap{position:absolute;right:16%;bottom:50px;z-index:1;transition:transform .6s ease}
+  @keyframes waveMove{from{transform:translateX(0)}to{transform:translateX(-140px)}}
+  .farwrap{position:absolute;right:26%;bottom:36px;z-index:1;transition:transform .6s ease}
   .farship{font-size:10px;color:var(--amber-dim);line-height:1;animation:farBob 3.4s ease-in-out infinite}
   @keyframes farBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
   .ghostship{animation:ghostFlicker 2.4s ease-in-out infinite}
   @keyframes ghostFlicker{0%,100%{opacity:.12}50%{opacity:.55}}
-  .palm{position:absolute;right:22px;bottom:38px;color:var(--amber-dim);font-size:14px;line-height:1.05;z-index:1}
-  .tent{position:absolute;bottom:-4px;color:var(--amber-dim);font-size:13px;line-height:1;z-index:4;text-shadow:var(--glow);animation:tentRise 2.4s ease-out forwards,tentSway 2.2s ease-in-out 1.2s infinite}
+  .palm{position:absolute;left:0;bottom:-10px;z-index:1}
+  .tent{position:absolute;bottom:-4px;z-index:4;animation:tentRise 2.4s ease-out forwards,tentSway 2.2s ease-in-out 1.2s infinite}
   .t1{left:14%}
-  .t2{right:16%;animation-delay:.5s,1.7s}
+  .t2{right:26%;animation-delay:.5s,1.7s}
   @keyframes tentRise{from{transform:translateY(95px)}to{transform:translateY(0)}}
   @keyframes tentSway{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-5px) rotate(5deg)}}
-  .siren{position:absolute;right:20%;bottom:44px;font-size:12px;color:var(--amber-dim);line-height:1.05;z-index:1;text-shadow:var(--glow)}
+  .siren{position:absolute;right:24%;bottom:34px;z-index:1}
   .notes{position:absolute;right:17%;bottom:84px;z-index:1}
   .notes span{position:absolute;color:var(--amber-bright);text-shadow:var(--glow);font-size:16px;opacity:0;animation:noteFloat 3s ease-out infinite}
   .notes span:nth-child(1){right:0;animation-delay:0s}
@@ -221,8 +221,19 @@
   @keyframes flagPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
   @keyframes glowPulse{0%,100%{box-shadow:inset 0 0 50px rgba(0,0,0,.55)}50%{box-shadow:inset 0 0 68px rgba(0,0,0,.68)}}
   @keyframes titleGlow{0%,100%{text-shadow:0 0 4px rgba(255,176,0,.55),0 0 12px rgba(255,140,0,.25)}50%{text-shadow:0 0 8px rgba(255,200,80,.85),0 0 24px rgba(255,150,0,.45)}}
+  .shipSvg{display:block;filter:drop-shadow(0 0 6px rgba(255,176,0,.35))}
+  .sunSvg{position:absolute;right:16px;top:6px;animation:sunSpin 40s linear infinite;filter:drop-shadow(0 0 12px rgba(255,176,0,.55))}
+  @keyframes sunSpin{to{transform:rotate(360deg)}}
+  .birdwrap{position:absolute;top:20px;left:-10%;z-index:1;animation:gullFly 14s linear infinite}
+  .birdwrap.b2{top:34px;animation-duration:20s;animation-delay:-7s}
+  .birdwrap.b3{top:12px;animation-duration:17s;animation-delay:-12s}
+  .bird{display:block;transform-origin:50% 60%;animation:flap .5s ease-in-out infinite alternate}
+  @keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(.45)}}
+  .winskull{display:block;margin:8px auto;animation:skullPulse 2.6s ease-in-out infinite;filter:drop-shadow(0 0 16px rgba(255,176,0,.5))}
+  @keyframes skullPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  .stone{display:block;margin:6px auto;filter:drop-shadow(0 0 8px rgba(255,90,31,.22))}
   @media (prefers-reduced-motion:reduce){
-    .shipwrap,.wave,.sun,.farship,.tent,.rainfx,.boltfx,.sparks i,.sailing-dots span,.titleship,.screen.shakefx,.notes span,.cloud,.gull,.wake,.bubbles span,.flagpulse,.screen{animation:none!important}
+    .shipwrap,.wave,.sun,.farship,.tent,.rainfx,.boltfx,.sparks i,.sailing-dots span,.titleship,.screen.shakefx,.notes span,.cloud,.gull,.wake,.bubbles span,.flagpulse,.screen,.bird,.birdwrap,.sunSvg,.winskull{animation:none!important}
   }
 </style>
 </head>
@@ -331,15 +342,30 @@ function statusBar(){
     <div>Day <span>${G.day}</span></div>
   </div>`;
 }
+function svgProgress(pct){
+  const x = 12 + (296-12)*clamp(pct,0,1);
+  return `<svg width="100%" height="34" viewBox="0 0 320 34" preserveAspectRatio="none" style="display:block">
+    <line x1="10" y1="24" x2="304" y2="24" stroke="#7a4e08" stroke-width="2" stroke-dasharray="3 5"/>
+    <line x1="10" y1="24" x2="${Math.max(10,Math.round(x))}" y2="24" stroke="#ffb000" stroke-width="3"/>
+    <circle cx="10" cy="24" r="3.5" fill="#b5730a"/>
+    <line x1="306" y1="10" x2="306" y2="26" stroke="#ffb000" stroke-width="2"/>
+    <path d="M306 10 L318 14 L306 18 Z" fill="#ffb000"/>
+    <g transform="translate(${Math.round(x)},0)">
+      <path d="M-8 24 L8 24 L5 30 Q0 32 -5 30 Z" fill="#ffb000"/>
+      <line x1="0" y1="10" x2="0" y2="24" stroke="#ffb000" stroke-width="2"/>
+      <path d="M0 10 L7 17 L0 17 Z" fill="rgba(255,176,0,.85)"/>
+    </g>
+  </svg>`;
+}
 function progressLine(){
   const pct = clamp(G.league/LEAGUES_TOTAL,0,1);
-  const cells = 30, at = Math.min(cells-1, Math.round(pct*(cells-1)));
-  let track="";
-  for(let i=0;i<cells;i++){ track += (i<at)?"~":(i===at)?"\u26f5":"\u00b7"; }
-  return `<pre class="dim fs20">Tortuga =${track}<span class="flagpulse">\u2691</span> ${DEST}
-        ${Math.min(G.league,LEAGUES_TOTAL)} of ${LEAGUES_TOTAL} leagues \u2014 ${Math.round(pct*100)}% to plunder</pre>`;
+  return `<div style="margin:4px 0 8px">
+    <div class="row dim fs20" style="margin-bottom:0"><span>Tortuga</span><span>${DEST}</span></div>
+    ${svgProgress(pct)}
+    <p class="center dim fs20" style="margin:0">${Math.min(G.league,LEAGUES_TOTAL)} of ${LEAGUES_TOTAL} leagues \u2014 ${Math.round(pct*100)}% to plunder</p>
+  </div>`;
 }
-/* ============================== HIGH SCORES/* ============================== HIGH SCORES ============================== */
+/* ============================== HIGH SCORES/* ============================== HIGH SCORES/* ============================== HIGH SCORES ============================== */
 const HS_KEY = "dmt_scores_v1";
 let SCORES = null;               // session cache; source of truth once loaded
 
@@ -493,18 +519,9 @@ function render(){
 
 /* ------------------------------ TITLE ------------------------------ */
 function titleScreen(){
-  const ship =
-`                    |    |    |
-                   )_)  )_)  )_)
-                  )___))___))___)\\
-                 )____)____)_____)\\\\
-               _____|____|____|____\\\\\\__
-      ~~~~~~~~~\\                    /~~~~~~~~~~~
-    ~~~  ~~~~~~ \\__________________/ ~~~~ ~~ ~~~
-   ~~~ ~~~~~ ~~~~~ ~~~~~~~ ~~~~~ ~~~~~~~ ~~~~ ~~~~`;
   crt.innerHTML = `
+    ${seaScene({tall:true})}
     <div class="center">
-      <pre class="dim titleship" style="font-size:clamp(6px,1.9vw,13px)">${ship}</pre>
       <h1 class="big">DEAD MAN'S TRAIL</h1>
       <p class="sub">A FIZZ-FUELLED VOYAGE · MMXXVI</p>
       <p class="fs22 dim" style="margin-top:18px">Sail from Tortuga to ${DEST}.<br>Keep yer crew fed, yer barrels full, and yer hull afloat.</p>
@@ -678,24 +695,73 @@ const TENTACLE =
  ) )
 ( (
  \\ \\`;
+function svgShip(w){
+  return `<svg width="${w}" viewBox="0 0 220 132" fill="none" class="shipSvg">
+    <line x1="14" y1="92" x2="-2" y2="76" stroke="#b5730a" stroke-width="3"/>
+    <line x1="58" y1="18" x2="58" y2="92" stroke="#b5730a" stroke-width="3"/>
+    <line x1="110" y1="6" x2="110" y2="94" stroke="#b5730a" stroke-width="3"/>
+    <line x1="162" y1="18" x2="162" y2="92" stroke="#b5730a" stroke-width="3"/>
+    <path d="M58 24 L58 80 L28 80 Z" fill="rgba(255,176,0,.15)" stroke="#ffb000" stroke-width="2"/>
+    <path d="M110 12 L110 82 L72 82 Z" fill="rgba(255,176,0,.18)" stroke="#ffb000" stroke-width="2"/>
+    <path d="M162 24 L162 80 L128 80 Z" fill="rgba(255,176,0,.15)" stroke="#ffb000" stroke-width="2"/>
+    <path d="M110 6 L134 11 L110 16 Z" fill="#ffb000"/>
+    <path d="M14 92 L206 92 L186 118 Q110 128 34 118 Z" fill="rgba(255,176,0,.12)" stroke="#ffb000" stroke-width="3"/>
+    <circle cx="72" cy="104" r="3" fill="#ffb000"/><circle cx="102" cy="106" r="3" fill="#ffb000"/><circle cx="132" cy="106" r="3" fill="#ffb000"/><circle cx="160" cy="104" r="3" fill="#ffb000"/>
+  </svg>`;
+}
+function svgBird(w){ return `<svg class="bird" width="${w}" viewBox="0 0 24 10" fill="none"><path d="M2 8 Q7 1 12 7 Q17 1 22 8" stroke="#b5730a" stroke-width="2" stroke-linecap="round"/></svg>`; }
+function svgSun(){ return `<svg class="sunSvg" width="40" height="40" viewBox="0 0 52 52"><g stroke="#ffb000" stroke-width="2.5" stroke-linecap="round"><line x1="26" y1="2" x2="26" y2="10"/><line x1="26" y1="42" x2="26" y2="50"/><line x1="2" y1="26" x2="10" y2="26"/><line x1="42" y1="26" x2="50" y2="26"/><line x1="9" y1="9" x2="14.5" y2="14.5"/><line x1="37.5" y1="37.5" x2="43" y2="43"/><line x1="43" y1="9" x2="37.5" y2="14.5"/><line x1="14.5" y1="37.5" x2="9" y2="43"/></g><circle cx="26" cy="26" r="11" fill="#ffb000"/></svg>`; }
+function svgCloud(w){ return `<svg width="${w}" viewBox="0 0 60 22" fill="rgba(181,115,10,.32)"><ellipse cx="18" cy="14" rx="14" ry="7"/><ellipse cx="34" cy="10" rx="12" ry="8"/><ellipse cx="46" cy="15" rx="11" ry="6"/></svg>`; }
+function svgTent(){ return `<svg width="34" height="102" viewBox="0 0 40 110" fill="none"><path d="M22 110 C4 86 36 66 18 44 C6 28 24 14 20 2" stroke="#b5730a" stroke-width="9" stroke-linecap="round"/><circle cx="17" cy="88" r="3" fill="#ffb000"/><circle cx="24" cy="62" r="3" fill="#ffb000"/><circle cx="15" cy="36" r="3" fill="#ffb000"/><circle cx="21" cy="14" r="2.5" fill="#ffb000"/></svg>`; }
+function svgSiren(){ return `<svg width="84" viewBox="0 0 90 72" fill="none"><path d="M4 72 Q22 52 46 57 Q72 50 88 72 Z" fill="#1a1106" stroke="#7a4e08" stroke-width="2"/><circle cx="41" cy="24" r="6.5" fill="#b5730a"/><path d="M41 18 Q54 22 51 42 Q47 30 41 31 Q35 29 33 42 Q29 24 41 18" fill="#b5730a"/><path d="M41 31 Q46 42 38 49 Q28 57 15 52 Q27 51 31 45 Q37 39 36 32 Z" fill="#b5730a"/><path d="M15 52 Q8 46 3 52 Q10 54 7 61 Q14 57 15 52" fill="#b5730a"/></svg>`; }
+function svgPalm(){ return `<svg width="118" viewBox="0 0 130 96" fill="none">
+  <path d="M0 96 L0 76 Q18 60 48 62 Q86 58 112 70 Q124 76 130 86 L130 96 Z" fill="#1c1206" stroke="#7a4e08" stroke-width="2.5"/>
+  <path d="M8 74 Q26 64 48 65 Q80 62 104 71" stroke="rgba(255,176,0,.3)" stroke-width="2"/>
+  <path d="M52 66 Q58 44 50 26" stroke="#7a4e08" stroke-width="5" stroke-linecap="round"/>
+  <g stroke="#b5730a" stroke-width="3.5" stroke-linecap="round" fill="none">
+    <path d="M50 26 Q34 20 24 28"/>
+    <path d="M50 26 Q38 12 28 12"/>
+    <path d="M50 26 Q52 6 42 4"/>
+    <path d="M50 26 Q62 10 74 10"/>
+    <path d="M50 26 Q68 20 80 30"/>
+  </g>
+  <circle cx="47" cy="30" r="3" fill="#b5730a"/><circle cx="55" cy="31" r="3" fill="#b5730a"/>
+  <path d="M92 68 q2 -8 6 -11 M96 68 q0 -9 -3 -12 M99 68 q3 -6 7 -8" stroke="#b5730a" stroke-width="2" stroke-linecap="round" fill="none"/>
+</svg>`; }
+function svgSkull(w,cls){ return `<svg width="${w}" viewBox="0 0 200 200" class="${cls||""}" fill="none">
+  <g transform="rotate(45 100 118)"><rect x="30" y="112" width="140" height="13" rx="6" fill="#b5730a"/><circle cx="30" cy="112" r="9" fill="#b5730a"/><circle cx="30" cy="125" r="9" fill="#b5730a"/><circle cx="170" cy="112" r="9" fill="#b5730a"/><circle cx="170" cy="125" r="9" fill="#b5730a"/></g>
+  <g transform="rotate(-45 100 118)"><rect x="30" y="112" width="140" height="13" rx="6" fill="#b5730a"/><circle cx="30" cy="112" r="9" fill="#b5730a"/><circle cx="30" cy="125" r="9" fill="#b5730a"/><circle cx="170" cy="112" r="9" fill="#b5730a"/><circle cx="170" cy="125" r="9" fill="#b5730a"/></g>
+  <ellipse cx="100" cy="82" rx="52" ry="48" fill="#ffb000"/>
+  <path d="M63 96 h74 v22 a13 13 0 0 1 -13 13 h-9 v9 h-10 v-9 h-10 v9 h-10 v-9 h-9 a13 13 0 0 1 -13 -13 z" fill="#ffb000"/>
+  <ellipse cx="82" cy="82" rx="15" ry="17" fill="#120b04"/>
+  <ellipse cx="118" cy="82" rx="15" ry="17" fill="#120b04"/>
+  <path d="M100 92 l-9 17 h18 z" fill="#120b04"/>
+  <rect x="90" y="118" width="4" height="15" rx="2" fill="#120b04"/><rect x="106" y="118" width="4" height="15" rx="2" fill="#120b04"/><rect x="98" y="118" width="4" height="18" rx="2" fill="#120b04"/>
+</svg>`; }
+function svgStone(w,name){ return `<svg width="${w}" viewBox="0 0 160 132" fill="none" class="stone">
+  <path d="M30 128 L30 44 Q30 12 80 12 Q130 12 130 44 L130 128" fill="rgba(122,78,8,.16)" stroke="#7a4e08" stroke-width="3"/>
+  <text x="80" y="46" text-anchor="middle" font-family="inherit" font-size="20" fill="#b5730a">R.I.P.</text>
+  <circle cx="80" cy="68" r="11" fill="#b5730a"/><rect x="72" y="75" width="16" height="8" rx="3" fill="#b5730a"/>
+  <circle cx="76" cy="67" r="2.8" fill="#120b04"/><circle cx="84" cy="67" r="2.8" fill="#120b04"/>
+  <text x="80" y="106" text-anchor="middle" font-family="inherit" font-size="14" fill="#b5730a">${name||""}</text>
+  <line x1="14" y1="128" x2="146" y2="128" stroke="#7a4e08" stroke-width="3"/>
+</svg>`; }
 function seaScene(o){
   o=o||{};
   const h = o.tall?225 : o.mini?115 : 145;
   const tilt = o.enemyTilt||0;
+  const shipW = o.tall?168 : o.mini?92 : 126;
+  const birds = o.storm?``:`<div class="birdwrap">${svgBird(22)}</div><div class="birdwrap b2">${svgBird(15)}</div><div class="birdwrap b3">${svgBird(12)}</div>`;
   return `<div class="sea${o.storm?' stormsea':''}" style="height:${h}px">
-    <div class="sun"></div>
-    <pre class="cloud">.-~~-.</pre>
-    <pre class="cloud c2">.-~-.</pre>
-    ${o.storm?``:`<pre class="gull">~v~</pre>`}
-    ${o.palm?`<pre class="palm">_\\|/_
-  |
-  |</pre>`:''}
-    ${(o.otherShip||o.ghost)?`<div class="farwrap" style="transform:rotate(${tilt}deg)"><pre class="farship${o.ghost?' ghostship':''}">${SHIP_FAR}</pre></div>`:''}
-    ${o.tentacles?`<pre class="tent t1">${TENTACLE}</pre><pre class="tent t2">${TENTACLE}</pre>`:''}
-    ${o.sirens?`<pre class="siren">  \\o
-   |\\
-__/~\\__</pre><div class="notes"><span>\u266a</span><span>\u266b</span><span>\u266a</span></div>`:''}
-    <div class="shipwrap${o.sink?' sinking':''}"><pre class="shipart" style="font-size:${o.tall?12:9}px">${SHIP_SMALL}</pre><pre class="wake">~  ~  ~</pre></div>
+    ${o.storm?``:svgSun()}
+    <div class="cloud">${svgCloud(46)}</div>
+    <div class="cloud c2">${svgCloud(34)}</div>
+    ${birds}
+    ${o.palm?`<div class="palm">${svgPalm()}</div>`:''}
+    ${(o.otherShip||o.ghost)?`<div class="farwrap" style="transform:rotate(${tilt}deg)"><div class="farship${o.ghost?' ghostship':''}">${svgShip(48)}</div></div>`:''}
+    ${o.tentacles?`<div class="tent t1">${svgTent()}</div><div class="tent t2">${svgTent()}</div>`:''}
+    ${o.sirens?`<div class="siren">${svgSiren()}</div><div class="notes"><span>\u266a</span><span>\u266b</span><span>\u266a</span></div>`:''}
+    <div class="shipwrap${o.sink?' sinking':''}"><div>${svgShip(shipW)}</div><pre class="wake">~  ~  ~</pre></div>
     <div class="wave w1"></div>
     <div class="wave w2"></div>
     <div class="wave w3"></div>
@@ -1433,21 +1499,11 @@ function win(){
   const score = voyageScore(true);
   const rank = voyageRank(score);
   recordEnd(score, rank, true);
-  const skull=
-`        _.--\"\"--._
-      .'          '.
-     /   O      O   \\
-    |    \\  ^^  /    |
-    \\     '----'     /
-     '. _______ .'
-       //_____\\\\
-      (( ____ ))
-       '------'`;
   crt.innerHTML = `
     <div class="center">
       <h1 class="big bright">YE MADE IT!</h1>
       <p class="fs22 dim">The ${G.ship} drops anchor at ${DEST}.</p>
-      <pre class="dim" style="font-size:12px;margin:10px 0">${skull}</pre>
+      ${svgSkull(150,"winskull")}
     </div>
     <div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     ${seaScene({mini:true,palm:true})}
@@ -1477,19 +1533,11 @@ function lose(reason){
   const score = voyageScore(false);
   const rank = voyageRank(score);
   recordEnd(score, rank, false);
-  const grave=
-`     .-------.
-    /  R.I.P. \\
-   /           \\
-  |   ${(G.ship||"").slice(0,9).padEnd(9)} |
-  |             |
-  |    ~~~~~    |
- _|_____________|_`;
   crt.innerHTML = `
     <div class="center">
       <h1 class="big danger">DAVY JONES' LOCKER</h1>
       ${seaScene({sink:true})}
-      <pre class="dim" style="font-size:13px;margin:12px 0">${grave}</pre>
+      ${svgStone(150, escapeHtml((G.ship||"").slice(0,14)))}
       <p class="fs24 danger">Captain ${G.captain} has died, for ${reason}.</p>
       <p class="fs20 dim">Ye sailed ${G.league} of ${LEAGUES_TOTAL} leagues over ${G.day} days.</p>
     </div>
