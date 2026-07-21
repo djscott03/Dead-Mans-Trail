@@ -166,7 +166,7 @@
   .t2 svg{transform:scaleX(-1)}
   @keyframes tentRise{from{transform:translateY(95px)}to{transform:translateY(0)}}
   @keyframes tentSway{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-5px) rotate(5deg)}}
-  .siren{position:absolute;right:24%;bottom:34px;z-index:1}
+  .siren{position:absolute;right:24%;bottom:28px;z-index:1}
   .notes{position:absolute;right:17%;bottom:84px;z-index:1}
   .notes span{position:absolute;color:var(--amber-bright);text-shadow:var(--glow);font-size:16px;opacity:0;animation:noteFloat 3s ease-out infinite}
   .notes span:nth-child(1){right:0;animation-delay:0s}
@@ -720,7 +720,15 @@ function svgTent(){ return `<svg width="36" height="108" viewBox="0 0 40 114" fi
   <circle cx="22" cy="42" r="2.1" fill="#ffb000"/>
   <circle cx="24" cy="26" r="1.8" fill="#ffb000"/>
 </svg>`; }
-function svgSiren(){ return `<svg width="84" viewBox="0 0 90 72" fill="none"><path d="M4 72 Q22 52 46 57 Q72 50 88 72 Z" fill="#1a1106" stroke="#7a4e08" stroke-width="2"/><circle cx="41" cy="24" r="6.5" fill="#b5730a"/><path d="M41 18 Q54 22 51 42 Q47 30 41 31 Q35 29 33 42 Q29 24 41 18" fill="#b5730a"/><path d="M41 31 Q46 42 38 49 Q28 57 15 52 Q27 51 31 45 Q37 39 36 32 Z" fill="#b5730a"/><path d="M15 52 Q8 46 3 52 Q10 54 7 61 Q14 57 15 52" fill="#b5730a"/></svg>`; }
+function svgSiren(){ return `<svg width="50" viewBox="0 0 64 58" fill="none">
+  <path d="M4 58 L10 46 L22 42 L34 45 L46 40 L56 46 L60 58 Z" fill="#1a1106" stroke="#7a4e08" stroke-width="2"/>
+  <path d="M9 46 Q1 42 3 34 Q6 39 9 38 Q8 31 13 28 Q13 36 16 40 Z" fill="#b5730a"/>
+  <path d="M38 38 Q28 44 19 42 Q11 40 9 44 Q14 46 22 46 Q33 45 42 38 Z" fill="#b5730a"/>
+  <path d="M36 22 Q33 28 34 33 Q34 36 36 38 L41 38 Q42 30 40 24 Z" fill="#b5730a"/>
+  <circle cx="37" cy="17" r="4.6" fill="#b5730a"/>
+  <path d="M38 12 Q49 15 47 27 Q46 36 40 40 Q44 31 42 24 Q41 17 36 17 Q33 12 38 12" fill="#b5730a"/>
+  <path d="M35 21 Q29 18 26 12" stroke="#b5730a" stroke-width="3" stroke-linecap="round"/>
+</svg>`; }
 function svgPalm(){ return `<svg width="118" viewBox="0 0 130 96" fill="none">
   <path d="M0 96 L0 76 Q18 60 48 62 Q86 58 112 70 Q124 76 130 86 L130 96 Z" fill="#1c1206" stroke="#7a4e08" stroke-width="2.5"/>
   <path d="M8 74 Q26 64 48 65 Q80 62 104 71" stroke="rgba(255,176,0,.3)" stroke-width="2"/>
