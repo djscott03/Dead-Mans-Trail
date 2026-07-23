@@ -164,7 +164,7 @@
   @keyframes farBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
   .ghostship{animation:ghostFlicker 2.4s ease-in-out infinite;filter:hue-rotate(150deg) saturate(.55) brightness(1.3)}
   @keyframes ghostFlicker{0%,100%{opacity:.12}50%{opacity:.55}}
-  .palm{position:absolute;right:0;bottom:0;z-index:2;transform:scaleX(-1)}
+  .palm{position:absolute;right:0;bottom:10px;z-index:2;transform:scaleX(-1)}
   .tent{position:absolute;bottom:-4px;z-index:4;animation:tentRise 2.4s ease-out forwards,tentSway 2.2s ease-in-out 1.2s infinite}
   .t1{left:14%}
   .t2{right:26%;animation-delay:.5s,1.7s}
@@ -273,6 +273,7 @@
     animation:fogDrift 12s ease-in-out infinite alternate}
   @keyframes fogDrift{from{transform:translateX(-16px)}to{transform:translateX(16px)}}
   .notes.party{right:auto;left:36%;bottom:62%}
+  .portsea .w1,.portsea .w3{display:none}
   .siren svg{filter:drop-shadow(0 0 8px rgba(126,240,221,.35))}
   /* boarding-action reflex targets */
   .boarder{all:unset;position:absolute;width:56px;height:56px;display:flex;align-items:center;justify-content:center;
@@ -331,7 +332,7 @@ function newGame(){
     hull:100, morale:70,
     league:0, day:1,
     pace:"steady", food:"filling", grog:"meager",
-    atPort:false, portName:"",
+    atPort:false, portName:"", nextPort:0, portMult:1,
     log:[],
     event:null, combat:null, pendingAfterEvent:null,
     outcome:null, deaths:[],
@@ -398,6 +399,11 @@ function svgProgress(pct){
     <circle cx="10" cy="24" r="3.5" fill="#b5730a"/>
     <line x1="306" y1="10" x2="306" y2="26" stroke="#ffb000" stroke-width="2"/>
     <path d="M306 10 L318 14 L306 18 Z" fill="#ffb000"/>
+    ${PORTS.map(pt=>{
+      const px = Math.round(12 + (296-12)*clamp(pt.at/LEAGUES_TOTAL,0,1));
+      const passed = G.league >= pt.at;
+      return `<line x1="${px}" y1="18" x2="${px}" y2="30" stroke="${passed?'#7a4e08':'#ffd98a'}" stroke-width="2"/><circle cx="${px}" cy="16" r="3" fill="${passed?'#7a4e08':'#ffd98a'}"/>`;
+    }).join('')}
     <g transform="translate(${Math.round(x)},0)">
       <path d="M-8 24 L8 24 L5 30 Q0 32 -5 30 Z" fill="#ffb000"/>
       <line x1="0" y1="10" x2="0" y2="24" stroke="#ffb000" stroke-width="2"/>
@@ -411,6 +417,7 @@ function progressLine(){
     <div class="row dim fs20" style="margin-bottom:0"><span>Tortuga</span><span>${DEST}</span></div>
     ${svgProgress(pct)}
     <p class="center dim fs20" style="margin:0">${Math.min(G.league,LEAGUES_TOTAL)} of ${LEAGUES_TOTAL} leagues \u2014 ${Math.round(pct*100)}% to plunder</p>
+    <p class="center faint fs20" style="margin:0">${(G.nextPort||0)<PORTS.length?`\u2693 Next port: ${PORTS[G.nextPort||0].name} \u2014 ${Math.max(0,PORTS[G.nextPort||0].at-G.league)} leagues ahead`:`\u2693 No ports remain \u2014 nothing but open sea to the Isle`}</p>
   </div>`;
 }
 /* ============================== HIGH SCORES/* ============================== HIGH SCORES/* ============================== HIGH SCORES ============================== */
@@ -699,9 +706,26 @@ function saveCrew(){
 }
 
 /* ------------------------------ OUTFIT / STORE ------------------------------ */
-const STORE_PRICES = { rations:2, rum:3, cannonballs:6, hull:4 }; // hull = per 5% repair
+const STORE_PRICES = { rations:2, rum:3, cannonballs:6, hull:4 }; // hull = per 5% repair, at Tortuga rates
+const PORTS = [
+  {name:"Nassau",         at:400,  mult:1.25},
+  {name:"Port Royal",     at:800,  mult:1.5},
+  {name:"Nombre de Dios", at:1250, mult:1.75},
+  {name:"Petit-Goâve",    at:1650, mult:2},
+];
+function priceOf(kind){ return Math.round(STORE_PRICES[kind]*(G.portMult||1)); }
+function portEvent(p){
+  const up = Math.round((p.mult-1)*100);
+  return { title:"🏝 LAND HO — "+p.name.toUpperCase(),
+    text:`The lookout spies ${p.name} off the bow — a friendly harbor, and the last ye'll see for many leagues. Goods run ${up}% dearer this far from Tortuga.`,
+    choices:[
+      {label:"Put into port", fn:()=>{ G.portName=p.name; G.portMult=p.mult; G.atPort=true; G.morale=clamp(G.morale+4,0,100); G.screen="store"; render(); }},
+      {label:"Sail past — no time to waste", fn:()=>resultScreen("🏝 ONWARD",`Ye leave ${p.name} astern. No turning back now.`)},
+    ]};
+}
 function outfitScreen(){
   G.portName = "Tortuga";
+  G.portMult = 1;
   storeRender(true);
 }
 function storeScreen(){ storeRender(false); }
@@ -714,10 +738,10 @@ function storeRender(isOutfit){
     <div class="row" style="margin:6px 0"><span>Doubloons in purse:</span><span class="bright">${G.doubloons}</span></div>
     <hr>
     <div class="body fs21">
-      <div class="row"><span>Rations (${p.rations}db each)</span><span>hold: ${Math.floor(G.rations)}</span></div>
-      <div class="row"><span>Barrels of Siren's Cider (${p.rum}db each)</span><span>hold: ${Math.floor(G.rum)}</span></div>
-      <div class="row"><span>Cannonballs (${p.cannonballs}db each)</span><span>hold: ${G.cannonballs}</span></div>
-      <div class="row"><span>Hull repair (${p.hull}db per 5%)</span><span>hull: ${Math.round(G.hull)}%</span></div>
+      <div class="row"><span>Rations (${priceOf("rations")}db each)</span><span>hold: ${Math.floor(G.rations)}</span></div>
+      <div class="row"><span>Barrels of Siren's Cider (${priceOf("rum")}db each)</span><span>hold: ${Math.floor(G.rum)}</span></div>
+      <div class="row"><span>Cannonballs (${priceOf("cannonballs")}db each)</span><span>hold: ${G.cannonballs}</span></div>
+      <div class="row"><span>Hull repair (${priceOf("hull")}db per 5%)</span><span>hull: ${Math.round(G.hull)}%</span></div>
     </div>
     ${setMenu([
       {label:"Buy rations", fn:()=>buyMenu("rations")},
@@ -730,7 +754,7 @@ function storeRender(isOutfit){
   bindMenu();
 }
 function buyMenu(kind){
-  const price = STORE_PRICES[kind];
+  const price = priceOf(kind);
   const label = {rations:"rations",rum:"barrels of Siren's Cider",cannonballs:"cannonballs",hull:"hull repairs (5% each)"}[kind];
   const amounts = kind==="hull" ? [1,3,5] : [5,10,25];
   const opts = amounts.map(a=>{
@@ -882,7 +906,46 @@ function svgSiren(){ return `<svg width="66" viewBox="0 0 84 72" fill="none">
   <path d="M31 9 Q20 13 18 26 Q16 38 8 47 Q20 44 24 34 Q25 44 20 52 Q31 46 32 36 Q33 28 36 20 Q38 12 31 9 Z" fill="#ffd98a"/>
   <path d="M29 12 Q38 8 42 13 Q39 17 34 15 Z" fill="#ffd98a"/>
 </svg>`; }
-function svgPalm(){ return `<svg width="118" viewBox="0 0 130 96" fill="none">
+function svgPalm(style){
+  style = style||"nassau";
+  let extras = "";
+  if(style==="nassau"){
+    extras = `
+  <path d="M96 70 l9 -8 l9 8 Z" fill="#7a4e08"/>
+  <rect x="98" y="70" width="14" height="9" fill="#301d09" stroke="#7a4e08" stroke-width="1.5"/>
+  <rect x="102" y="72" width="5" height="5" fill="#ffd98a"><animate attributeName="opacity" values="1;.5;1" dur="2.4s" repeatCount="indefinite"/></rect>
+  <path d="M114 76 l7 -6 l7 6 Z" fill="#7a4e08"/>
+  <rect x="116" y="76" width="10" height="7" fill="#301d09" stroke="#7a4e08" stroke-width="1.5"/>
+  <rect x="119" y="78" width="4" height="4" fill="#ffd98a"><animate attributeName="opacity" values=".5;1;.5" dur="1.9s" repeatCount="indefinite"/></rect>`;
+  } else if(style==="royal"){
+    extras = `
+  <g stroke="#7a4e08" stroke-width="2.5" stroke-linecap="round">
+    <line x1="2" y1="82" x2="36" y2="82"/>
+    <line x1="8" y1="82" x2="8" y2="93"/><line x1="20" y1="82" x2="20" y2="93"/><line x1="32" y1="82" x2="32" y2="93"/>
+  </g>
+  <line x1="34" y1="82" x2="34" y2="68" stroke="#7a4e08" stroke-width="2"/>
+  <circle cx="34" cy="66" r="3.2" fill="#ffd98a"><animate attributeName="opacity" values="1;.45;1" dur="1.7s" repeatCount="indefinite"/></circle>
+  <path d="M100 72 l10 -9 l10 9 Z" fill="#7a4e08"/>
+  <rect x="102" y="72" width="16" height="10" fill="#301d09" stroke="#7a4e08" stroke-width="1.5"/>
+  <rect x="107" y="74" width="6" height="6" fill="#ffd98a"><animate attributeName="opacity" values="1;.5;1" dur="2.1s" repeatCount="indefinite"/></rect>`;
+  } else if(style==="dios"){
+    extras = `
+  <path d="M96 80 L96 52 L101 47 L105 52 L105 47 L111 47 L111 52 L115 47 L120 52 L120 80 Z" fill="#301d09" stroke="#7a4e08" stroke-width="2"/>
+  <rect x="104" y="59" width="7" height="8" fill="#ffd98a"><animate attributeName="opacity" values=".55;1;.55" dur="2.6s" repeatCount="indefinite"/></rect>
+  <line x1="108" y1="47" x2="108" y2="36" stroke="#7a4e08" stroke-width="2"/>
+  <path d="M108 36 L120 39 L108 43 Z" fill="#ff5a1f"/>`;
+  } else if(style==="goave"){
+    extras = `
+  <path d="M90 70 l8 -11 l8 11 Z" fill="#1c1206" stroke="#7a4e08" stroke-width="2"/>
+  <path d="M114 73 l7 -9 l7 9 Z" fill="#1c1206" stroke="#7a4e08" stroke-width="2"/>
+  <circle cx="106" cy="72" r="6" fill="rgba(255,176,0,.3)">
+    <animate attributeName="r" values="4;9;4" dur="1.1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values=".6;.25;.6" dur="1.1s" repeatCount="indefinite"/>
+  </circle>
+  <path d="M103 74 l3 -7 l3 7 Z" fill="#ffb000"><animate attributeName="opacity" values="1;.55;1" dur=".7s" repeatCount="indefinite"/></path>
+  <g stroke="#7a4e08" stroke-width="1.8" stroke-linecap="round"><line x1="102" y1="75" x2="110" y2="72"/><line x1="102" y1="72" x2="110" y2="75"/></g>`;
+  }
+  return `<svg width="118" viewBox="0 0 130 96" fill="none">
   <path d="M0 96 L0 76 Q18 60 48 62 Q86 58 112 70 Q124 76 130 86 L130 96 Z" fill="#1c1206" stroke="#7a4e08" stroke-width="2.5"/>
   <path d="M8 74 Q26 64 48 65 Q80 62 104 71" stroke="rgba(174,242,230,.25)" stroke-width="2"/>
   <path d="M52 66 Q58 44 50 26" stroke="#7a4e08" stroke-width="5" stroke-linecap="round"/>
@@ -895,12 +958,7 @@ function svgPalm(){ return `<svg width="118" viewBox="0 0 130 96" fill="none">
   </g>
   <circle cx="47" cy="30" r="3" fill="#b5730a"/><circle cx="55" cy="31" r="3" fill="#b5730a"/>
   <path d="M92 68 q2 -8 6 -11 M96 68 q0 -9 -3 -12 M99 68 q3 -6 7 -8" stroke="#2f9e57" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <path d="M96 70 l9 -8 l9 8 Z" fill="#7a4e08"/>
-  <rect x="98" y="70" width="14" height="9" fill="#301d09" stroke="#7a4e08" stroke-width="1.5"/>
-  <rect x="102" y="72" width="5" height="5" fill="#ffd98a"><animate attributeName="opacity" values="1;.5;1" dur="2.4s" repeatCount="indefinite"/></rect>
-  <path d="M114 76 l7 -6 l7 6 Z" fill="#7a4e08"/>
-  <rect x="116" y="76" width="10" height="7" fill="#301d09" stroke="#7a4e08" stroke-width="1.5"/>
-  <rect x="119" y="78" width="4" height="4" fill="#ffd98a"><animate attributeName="opacity" values=".5;1;.5" dur="1.9s" repeatCount="indefinite"/></rect>
+  ${extras}
 </svg>`; }
 function svgSkull(w,cls){ return `<svg width="${w}" viewBox="0 0 200 200" class="${cls||""}" fill="none">
   <g transform="rotate(45 100 118)"><rect x="30" y="112" width="140" height="13" rx="6" fill="#b5730a"/><circle cx="30" cy="112" r="9" fill="#b5730a"/><circle cx="30" cy="125" r="9" fill="#b5730a"/><circle cx="170" cy="112" r="9" fill="#b5730a"/><circle cx="170" cy="125" r="9" fill="#b5730a"/></g>
@@ -1012,14 +1070,14 @@ function seaScene(o){
     <i style="left:52%;top:12px;animation-delay:1.9s"></i><i style="left:63%;top:28px;animation-delay:1.1s"></i>
     <i style="left:74%;top:8px;animation-delay:2.3s"></i><i style="left:87%;top:34px;animation-delay:.5s"></i>
   </div>`;
-  return `<div class="sea${o.storm?' stormsea':o.kraken?' krakensea':o.calm?' calmsea':''}" style="height:${h}px">
+  return `<div class="sea${o.storm?' stormsea':o.kraken?' krakensea':o.calm?' calmsea':''}${o.palm?' portsea':''}" style="height:${h}px">
     ${stars}
     ${o.storm?``:(o.ghost?svgMoon():svgSun(!!o.palm))}
     <div class="cloud">${svgCloud(46)}</div>
     <div class="cloud c2">${svgCloud(34)}</div>
     ${birds}
     ${o.tall&&!o.storm?`<div class="isle">${svgIsle()}</div>`:''}
-    ${o.palm?`<div class="palm">${svgPalm()}</div>`:''}
+    ${o.palm?`<div class="palm">${svgPalm(o.palm===true?"nassau":o.palm)}</div>`:''}
     ${(o.otherShip||o.ghost)?`<div class="farwrap" style="transform:rotate(${tilt}deg)"><div class="farship${o.ghost?' ghostship':''}">${svgShip(52,{flag:o.enemyFlag||"skull"})}</div></div>`:''}
     ${o.tentacles?`<div class="tent t1">${svgTent()}</div><div class="tent t2">${svgTent()}</div>`:''}
     ${o.sirens?`<div class="siren">${svgSiren()}</div><div class="notes"><span>\u266a</span><span>\u266b</span><span>\u266a</span></div>`:''}
@@ -1027,7 +1085,7 @@ function seaScene(o){
     ${o.bottle?`<div class="bottlefx">${svgBottle()}</div>`:''}
     ${o.party?`<div class="notes party"><span>\u266a</span><span>\u266b</span><span>\u266a</span></div>`:''}
     ${o.fog?`<div class="fogfx"></div>`:''}
-    <div class="shipwrap${o.sink?' sinking':''}" style="bottom:${o.tall?6:o.mini?16:10}px;right:22%"><div style="transform:scaleX(-1)">${svgShip(shipW,{furl:o.calm,flag:o.sick?"yellow":"skull",party:o.party})}</div><pre class="wake">~  ~  ~</pre></div>
+    <div class="shipwrap${o.sink?' sinking':''}" style="bottom:${o.palm?4:o.tall?6:o.mini?16:10}px;right:22%"><div style="transform:scaleX(-1)">${svgShip(shipW,{furl:o.calm,flag:o.sick?"yellow":"skull",party:o.party})}</div><pre class="wake">~  ~  ~</pre></div>
     <div class="glints"></div>
     <div class="wave w1"></div>
     <div class="wave w2"></div>
@@ -1042,7 +1100,10 @@ function eventFx(title){
   if(title.indexOf("\ud83d\udc7b")>=0) return {ghost:true,fog:true};
   if(title.indexOf("\ud83c\udff4")>=0) return {otherShip:true,enemyFlag:"navy"};
   if(title.indexOf("\u2693")>=0) return {otherShip:true,enemyFlag:"merchant"};
-  if(title.indexOf("\ud83c\udfdd")>=0) return {palm:true};
+  if(title.indexOf("\ud83c\udfdd")>=0){
+    const t=title.toUpperCase();
+    return {palm: t.indexOf("ROYAL")>=0?"royal" : t.indexOf("DIOS")>=0?"dios" : t.indexOf("PETIT")>=0?"goave" : "nassau"};
+  }
   if(title.indexOf("🧜")>=0) return {sirens:true};
   if(title.indexOf("🌊")>=0) return {calm:true};
   if(title.indexOf("🪨")>=0) return {reef:true};
@@ -1218,6 +1279,15 @@ function sailOn(){
 
   // win?
   if(G.league>=LEAGUES_TOTAL){ G.league=LEAGUES_TOTAL; return win(); }
+
+  // fixed port reached? (catches marks skipped by bonus leagues too)
+  const np = G.nextPort||0;
+  if(np < PORTS.length && G.league >= PORTS[np].at){
+    G.nextPort = np+1;
+    G.event = portEvent(PORTS[np]);
+    G.event._notes = notes;
+    return showSailing(dist, days);
+  }
 
   // roll event
   const ev = rollEvent();
@@ -1506,15 +1576,6 @@ const EVENTS = [
         }},
       ]};
   }},
-  // FRIENDLY PORT
-  { w:2, make(){
-    const port = pick(["Port Royal","Nassau","Nombre de Dios","Petit-Goâve","Isla Perla"]);
-    return { title:"🏝 LAND HO — "+port.toUpperCase(), text:`A friendly harbor opens up. Ye could put in to trade, repair, and water the ship.`,
-      choices:[
-        {label:"Put into port", fn:()=>{ G.portName=port; G.atPort=true; G.morale=clamp(G.morale+4,0,100); G.screen="store"; render(); }},
-        {label:"Sail past — no time to waste", fn:()=>resultScreen("🏝 ONWARD","Ye keep the prow pointed to open sea.")},
-      ]};
-  }},
   // SHANTY / MORALE
   { w:1, make(){
     return { title:"🎶 A NIGHT OF SHANTIES", text:"Someone finds a fiddle. Before long the whole deck stamps and sings under the stars.",
@@ -1659,9 +1720,10 @@ function startAim(){
     c._rafId = requestAnimationFrame(sweepLoop);
   }
   c._rafId = requestAnimationFrame(sweepLoop);
+  if(c._keyFire) document.removeEventListener("keydown",c._keyFire);   // drop any stale listener from a prior aim
   const keyFire=(e)=>{ if(e.code==="Space"){ e.preventDefault(); fireNow(zoneL,zoneW,critL);} };
   document.addEventListener("keydown",keyFire,{once:true});
-  G.combat._keyFire=keyFire;
+  c._keyFire=keyFire;
 }
 function aimPos(t0){
   const ph = ((Date.now()-t0)/900) % 2;
@@ -1670,6 +1732,7 @@ function aimPos(t0){
 function fireNow(zoneL,zoneW,critL){
   const c=G.combat; if(!c.aim) return; c.aim=false;
   if(c._rafId) cancelAnimationFrame(c._rafId);
+  if(c._keyFire){ document.removeEventListener("keydown",c._keyFire); c._keyFire=null; }
   const pos = aimPos(c._aimT0 || Date.now());
   G.cannonballs--;
   fxFlash("fire"); shakeScreen(); fxCannon(false);
@@ -1799,9 +1862,11 @@ function winCombat(boarded){
   G.doubloons+=loot; G.cannonballs+=balls; G.morale=clamp(G.morale+8,0,100);
   floatText("+"+loot+" doubloons");
   const rations = boarded?rint(4,10):rint(2,6); G.rations+=rations;
+  const fallen = (G.deaths||[]).map(d=>d.name); G.deaths=[];
   G.combat=null;
   resultScreen("⚔ PRIZE TAKEN!",
-    `The ${e.name} strikes her colors! Ye plunder <span class="bright">${loot} doubloons</span>, ${balls} cannonballs, and ${rations} rations from her hold. The crew roars yer name.`);
+    `The ${e.name} strikes her colors! Ye plunder <span class="bright">${loot} doubloons</span>, ${balls} cannonballs, and ${rations} rations from her hold. The crew roars yer name.`+
+    (fallen.length?` <span class="danger">But the prize came dear — ${fallen.join(" and ")} fell in the fight.</span>`:''));
 }
 
 /* ------------------------------ SHIP'S LOG ------------------------------ */
