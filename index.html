@@ -1027,7 +1027,7 @@ function seaScene(o){
     ${o.bottle?`<div class="bottlefx">${svgBottle()}</div>`:''}
     ${o.party?`<div class="notes party"><span>\u266a</span><span>\u266b</span><span>\u266a</span></div>`:''}
     ${o.fog?`<div class="fogfx"></div>`:''}
-    <div class="shipwrap${o.sink?' sinking':''}" style="bottom:${o.tall?6:o.mini?16:10}px"><div style="transform:scaleX(-1)">${svgShip(shipW,{furl:o.calm,flag:o.sick?"yellow":"skull",party:o.party})}</div><pre class="wake">~  ~  ~</pre></div>
+    <div class="shipwrap${o.sink?' sinking':''}" style="bottom:${o.tall?6:o.mini?16:10}px;right:22%"><div style="transform:scaleX(-1)">${svgShip(shipW,{furl:o.calm,flag:o.sick?"yellow":"skull",party:o.party})}</div><pre class="wake">~  ~  ~</pre></div>
     <div class="glints"></div>
     <div class="wave w1"></div>
     <div class="wave w2"></div>
@@ -1628,7 +1628,7 @@ function combatControls(){
     G.cannonballs>0
       ? {label:`Fire cannons (${G.cannonballs} shot left)`, fn:startAim}
       : {label:`Fire cannons <span class="danger">(no shot in the locker!)</span>`, fn:()=>{ pushLog('<span class="danger">The shot locker is empty — board them or run!</span>'); }},
-    {label:"Board them! (risky, no shot needed)", fn:boardThem},
+    {label:`Board them! ${G.combat.enemy.hull>60?'<span class="tag">their decks swarm — thin them first</span>':'<span class="tag">they’re bloodied — good time to strike</span>'}`, fn:boardThem},
     {label:"Attempt to flee", fn:fleeCombat},
   ]);
   bindMenu();
@@ -1674,7 +1674,10 @@ function fireNow(zoneL,zoneW,critL){
   G.cannonballs--;
   fxFlash("fire"); shakeScreen(); fxCannon(false);
   let dmg, note;
-  if(pos>=critL && pos<=critL+12){ dmg=rint(28,42); note=`<span class="bright">A perfect broadside — ${dmg}% dealt!</span>`; }
+  if(pos>=critL && pos<=critL+12){
+    dmg=rint(28,42); note=`<span class="bright">A perfect broadside — ${dmg}% dealt!</span>`;
+    if(c.enemy.fire>8){ c.enemy.fire=Math.max(8,Math.round(c.enemy.fire*0.8)); note+=` <span class="bright">Her rigging crashes down — her guns slacken!</span>`; }
+  }
   else if(pos>=zoneL && pos<=zoneL+zoneW){ dmg=rint(14,24); note=`A solid hit — ${dmg}% dealt.`; }
   else { dmg=rint(0,8); note= dmg? `A glancing shot — only ${dmg}%.`:`<span class="danger">Missed clean into the waves!</span>`; }
   c.enemy.hull-=dmg;
@@ -1686,8 +1689,8 @@ function fireNow(zoneL,zoneW,critL){
 function boardThem(){
   const c=G.combat;
   INPUT_MODE=null; OPTIONS=[];
-  // fiercer ships throw more boarders at ye — soften 'em with cannon first
-  const total = clamp(Math.round(Math.max(0,c.enemy.hull)/14)+2, 3, 9);
+  // small fixed party — boarding finishes a bloodied foe, it can't fell a healthy one
+  const total = rint(4,6);
   let idx=0, struck=0, missed=0, dealt=0, done=false;
   let spawnTimer=null, lifeTimer=null;
 
@@ -1695,6 +1698,7 @@ function boardThem(){
     ${statusBar()}
     <h2 class="fs28 bright">⚔ BOARDING ACTION</h2>
     <p class="fs20 dim">Cut down every boarder — tap each blade the instant it flashes. A miss lets it bite ye.</p>
+    ${c.enemy.hull>60?'<p class="fs20 danger">Their decks swarm with defenders — cannon fire would thin them!</p>':''}
     <div class="row"><span>Enemy hull</span><span id="behull">${Math.round(Math.max(0,c.enemy.hull))}%</span></div>
     <div class="bar dng" style="width:100%"><i id="bebar" style="width:${clamp(c.enemy.hull,0,100)}%"></i></div>
     <div id="boardArena" style="position:relative;height:250px;border:1px solid var(--amber-faint);border-radius:8px;margin-top:12px;overflow:hidden;background:linear-gradient(180deg,#0e0a05,#0b0804);touch-action:manipulation">
@@ -1728,7 +1732,8 @@ function boardThem(){
       if(resolved||done) return; resolved=true; e.preventDefault();
       clearTimeout(lifeTimer);
       struck++;
-      const dmg=rint(9,15); c.enemy.hull-=dmg; dealt+=dmg;
+      const dmg = c.enemy.hull>60 ? rint(3,6) : rint(6,10);
+      c.enemy.hull-=dmg; dealt+=dmg;
       el.classList.add("struck"); el.textContent="✷"; floatText("-"+dmg+"%");
       updateHud();
       setTimeout(()=>el.remove(),150);
@@ -1738,15 +1743,15 @@ function boardThem(){
     lifeTimer=setTimeout(()=>{
       if(resolved||done) return; resolved=true;
       missed++;
-      const d=rint(3,7); G.hull=clamp(G.hull-d,0,100);
+      const d=rint(4,8); G.hull=clamp(G.hull-d,0,100);
       el.classList.add("miss"); floatText("-"+d+"% hull","dmg"); shakeScreen();
-      if(chance(0.10)){ const v=pick(livingCrew()); if(v){ v.alive=false; G.deaths.push({name:v.name}); } }
+      if(chance(0.12)){ const v=pick(livingCrew()); if(v){ v.alive=false; G.deaths.push({name:v.name}); } }
       updateHud();
       setTimeout(()=>el.remove(),220);
       if(G.hull<=0){ done=true; clearTimeout(spawnTimer); return lose("ye were cut down leading the boarding action"); }
       if(livingCrew().length===0){ done=true; clearTimeout(spawnTimer); return lose("yer boarding party was slain to the last"); }
       next(rint(220,470));
-    }, rint(720,1000));
+    }, rint(560,860));
   }
   function finish(){
     if(done) return; done=true;
